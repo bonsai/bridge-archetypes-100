@@ -12,7 +12,7 @@ case "$MODE" in
   dev|backend)
     echo "Starting FastAPI backend..."
     cd "$REPO_DIR"
-    python3 -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+    PYTHONPATH="$REPO_DIR/backend/src:$PYTHONPATH" python3 -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     ;;
   frontend)
     echo "Frontend is served at http://localhost:8000/static/ (embedded in FastAPI)"

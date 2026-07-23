@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>木材梁 応力可視化 - 建築士試験</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;background:#1a1a2e;color:#eee;margin:0;display:flex;height:100vh}
+#sidebar{width:320px;background:#16213e;padding:20px;overflow-y:auto}
+#sidebar h1{font-size:18px;margin-bottom:12px;color:#e94560}
+label{display:block;margin-top:10px;font-size:13px;color:#a0a0b0}
+input,select{width:100%;padding:6px;margin-top:4px;border:none;border-radius:4px;background:#0f3460;color:#fff;font-size:14px}
+input[type=range]{padding:0;height:6px}
+.gauge{background:#0f3460;height:18px;border-radius:9px;margin-top:4px;overflow:hidden}
+.gauge-fill{height:100%;width:0%;transition:width 0.2s;background:#0f0}
+.gauge-fill.warn{background:#ff0}
+.gauge-fill.danger{background:#f00}
+.result{padding:10px;margin-top:12px;background:#0f3460;border-radius:6px;font-size:13px}
+.result .big{font-size:22px;font-weight:bold}
+.fracture{color:#ff3333;font-size:28px;font-weight:bold;display:none}
+.fracture.show{display:block;animation:flash 0.5s infinite alternate}
+@keyframes flash{from{opacity:1}to{opacity:0.3}}
+#canvas-wrap{flex:1;display:flex;align-items:center;justify-content:center;position:relative;background:#0a0a1a}
+canvas{box-shadow:0 0 40px rgba(0,0,0,0.6)}
+#overlay{position:absolute;bottom:20px;left:20px;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,0.8);font-size:14px}
+.sumo{position:absolute;bottom:80px;transition:left 0.3s;font-size:40px;opacity:0.9}
+</style>
+</head>
+<body>
+<div id="sidebar">
+<h1>木材梁 応力可視化</h1>
+<label>アーキタイプ<select id="archetype"></select></label>
+<label>支持条件<select id="support"><option value="cantilever">片持ち梁</option><option value="simple">単純支持梁</option></select></label>
+<label>長さ L (mm)<input type="number" id="L" value="4000"></label>
+<label>幅 b (mm)<input type="number" id="b" value="300"></label>
+<label>高さ h (mm)<input type="number" id="h" value="450"></label>
+<label>弾性係数 E (MPa)<input type="number" id="E" value="10000"></label>
+<label>許容曲げ fb (MPa)<input type="number" id="fb" value="12"></label>
+<label>荷重 P (N) <span id="Pval">0</span><input type="range" id="P" min="0" max="100000" step="200" value="0"></label>
+<div class="gauge"><div id="sigmaGauge" class="gauge-fill"></div></div>
+<div class="result">
+<div>σ_max = <span id="sigmaMax" class="big">0</span> MPa</div>
+<div>τ_max = <span id="tauMax">0</span> MPa</div>
+<div>たわみ δ = <span id="deltaMax">0</span> mm</div>
+<div>必要梁高 = <span id="reqH">-</span> mm</div>
+<div>σ/fb = <span id="ratio">0.00</span></div>
+<div id="sumoInfo" style="margin-top:6px;color:#aaf">🥋 相撲力士 0 人分</div>
+</div>
+<div id="fracture" class="fracture">💥 破断！</div>
+<button id="autoplay" style="margin-top:16px;width:100%;padding:10px;background:#e94560;border:none;border-radius:6px;color:#fff;font-size:15px;cursor:pointer">▶ 自動実験</button>
+</div>
+<div id="canvas-wrap">
+<canvas id="canvas" width="1000" height="560"></canvas>
+<div id="overlay">
+<span id="beamType">片持ち梁</span> | L=<span id="dispL">4000</span>mm | h=<span id="dispH">180</span>mm | fb=<span id="dispFb">12</span>MPa
+</div>
+<div class="sumo" id="sumo">🥋</div>
+</div>
+<script src="/static/app.js"></script>
+</body>
+</html>
