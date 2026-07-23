@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+*.db
+*.db-journal
+.env
+.venv/
+node_modules/
+output/
+*.webm
+*.mp4

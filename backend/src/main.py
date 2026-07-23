@@ -42,6 +42,7 @@ def startup():
     global _ontology
     db_file = os.environ.get("ONTOLOGY_DB", "/home/bons/repos/bridge-archetypes-100/data/ontology.db")
     os.makedirs(os.path.dirname(db_file), exist_ok=True)
+    init_ontology_db()  # ensure schema exists
     _ontology = OntologyEngine(db_file)
     c = _ontology.db.execute("SELECT COUNT(*) FROM concepts").fetchone()[0]
     if c == 0:

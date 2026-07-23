@@ -34,7 +34,7 @@ def init_ontology_db():
 
 class OntologyEngine:
     def __init__(self, db_path: str = DB_PATH):
-        self.db = sqlite3.connect(db_path)
+        self.db = sqlite3.connect(db_path, check_same_thread=False)
         self.db.row_factory = sqlite3.Row
     
     def close(self):
