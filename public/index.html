@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>橋の構造100選 - 構造力学アート</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+<h1>橋の構造100選</h1>
+<p class="subtitle">構造力学 × ビジュアルアート — 初心者向けインタラクティブ学習</p>
+</header>
+
+<nav class="nav-grid">
+<a href="beam.html" class="nav-card beam">
+<div class="icon">🏗️</div>
+<h2>桁橋 (Beam)</h2>
+<p>最も基本的。曲げモーメントとせん断力の可視化。建築士試験頻出！</p>
+<span class="badge">入門</span>
+</a>
+<a href="arch.html" class="nav-card arch">
+<div class="icon">🌉</div>
+<h2>アーチ橋 (Arch)</h2>
+<p>圧縮力の美しさ。ローマの石橋から現代鋼アーチまで。</p>
+<span class="badge">入門</span>
+</a>
+<a href="suspension.html" class="nav-card suspension">
+<div class="icon">🌉</div>
+<h2>吊り橋 (Suspension)</h2>
+<p>長大橋の女王。ケーブルの力学と風の揺らぎ。</p>
+<span class="badge">中級</span>
+</a>
+<a href="truss.html" class="nav-card truss">
+<div class="icon">🔺</div>
+<h2>トラス橋 (Truss)</h2>
+<p>三角形のパズル。メンバー力の色分けで一目瞭然。</p>
+<span class="badge">入門</span>
+</a>
+<a href="sumo.html" class="nav-card sumo">
+<div class="icon">🥋</div>
+<h2>相撲力士 Simulator</h2>
+<p>何人居れば橋が破断する？直感的荷重体感ツール。</p>
+<span class="badge">実験</span>
+</a>
+<a href="stress.html" class="nav-card stress">
+<div class="icon">🎨</div>
+<h2>応力アート</h2>
+<p>色彩が語る構造の物語。応力度を色で感じる。</p>
+<span class="badge">アート</span>
+</a>
+</nav>
+
+<footer>
+<p>bridge-archetypes-100 — <a href="https://bonsai.github.io/bridge-archetypes-100/">GitHub Pages</a> | 2級建築士試験対応</p>
+</footer>
+
+<script src="js/data.js"></script>
+<script>
+// Simple entrance animation
+document.querySelectorAll('.nav-card').forEach((c,i)=>{
+    c.style.opacity = '0';
+    c.style.transform = 'translateY(30px)';
+    setTimeout(()=>{
+        c.style.transition = 'all 0.6s cubic-bezier(.23,1,.32,1)';
+        c.style.opacity = '1';
+        c.style.transform = 'translateY(0)';
+    }, 100 + i*120);
+});
+</script>
+</body>
+</html>
