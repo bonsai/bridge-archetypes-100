@@ -16,12 +16,24 @@ def get_conn() -> sqlite3.Connection:
     return conn
 
 def init_db():
-    """Create tables from schema.sql"""
-    conn = get_conn()
-    schema_path = os.path.join(os.path.dirname(__file__), "..", "..", "sql", "schema.sql")
-    if os.path.exists(schema_path):
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    conn = sqlite3.connect(DB_PATH)
+    # Try multiple possible paths for schema.sql
+    candidates = [
+        os.path.join(os.path.dirname(__file__), "..", "..", "sql", "schema.sql"),
+        os.path.join(os.path.dirname(__file__), "..", "sql", "schema.sql"),
+        os.path.join(os.path.dirname(__file__), "sql", "schema.sql"),
+    ]
+    schema_path = None
+    for c in candidates:
+        if os.path.exists(c):
+            schema_path = c
+            break
+    if schema_path:
         with open(schema_path) as f:
             conn.executescript(f.read())
+    else:
+        print(f"[db] WARNING: schema.sql not found. Tried: {candidates}")
     conn.commit()
     conn.close()
 

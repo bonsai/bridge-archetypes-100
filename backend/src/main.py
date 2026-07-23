@@ -15,6 +15,11 @@ import numpy as np
 
 from archetypes import REGISTRY, find_by_category, find_by_tag, agent_generate, generate_batch
 from db import init_db, seed_bridges, save_simulation, get_sims, sim_count
+from agent import StructuralAgent
+from ontology import OntologyEngine, init_ontology_db, seed_ontology
+
+_struct_agent = StructuralAgent()
+_ontology = None
 
 app = FastAPI(title="bridge-archetypes-100")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
@@ -34,11 +39,23 @@ if os.path.exists(static_dir):
 def startup():
     init_db()
     seed_bridges(REGISTRY)
-    print(f"[bridge100] Seeded {len(REGISTRY)} archetypes. Sim count: {sim_count()}")
+    global _ontology
+    db_file = os.environ.get("ONTOLOGY_DB", "/home/bons/repos/bridge-archetypes-100/data/ontology.db")
+    os.makedirs(os.path.dirname(db_file), exist_ok=True)
+    _ontology = OntologyEngine(db_file)
+    c = _ontology.db.execute("SELECT COUNT(*) FROM concepts").fetchone()[0]
+    if c == 0:
+        seed_ontology(_ontology)
+        c = _ontology.db.execute("SELECT COUNT(*) FROM concepts").fetchone()[0]
+    print(f"[bridge100] Archetypes={len(REGISTRY)}, Sims={sim_count()}, OntologyConcepts={c}")
 
-# ============================================================
-# Models
-# ============================================================
+@app.on_event("shutdown")
+def shutdown():
+    global _ontology
+    if _ontology:
+        _ontology.close()
+        _ontology = None
+
 class SolveReq(BaseModel):
     archetype_id: str = "W01"
     L_mm: float = 4000
@@ -195,9 +212,59 @@ def gen_archetype(category: str, count: int = 1, constraints: dict = None):
 def list_sims(fractured: bool = False, limit: int = 20):
     return get_sims(fractured_only=fractured, limit=limit)
 
+@app.get("/ontology/concepts")
+def ontology_concepts(search: str = None, category: str = None):
+    if not _ontology:
+        return {"error": "ontology not initialized"}
+    if search:
+        return _ontology.search(search, category)
+    rows = _ontology.db.execute("SELECT id,label,category,icon FROM concepts WHERE 1=1" + (" AND category=?" if category else ""), [category] if category else []).fetchall()
+    return [dict(r) for r in rows]
+
+@app.get("/ontology/concepts/{cid}")
+def ontology_concept(cid: str):
+    if not _ontology:
+        return {"error": "ontology not initialized"}
+    return {
+        "concept": _ontology.get_concept(cid),
+        "related": _ontology.related(cid),
+        "explanation": _ontology.explain(cid),
+    }
+
+@app.get("/ontology/path")
+def ontology_path(from_id: str, to_id: str, max_depth: int = 4):
+    if not _ontology:
+        return {"error": "ontology not initialized"}
+    paths = _ontology.path(from_id, to_id, max_depth)
+    # Convert ids to labels
+    labeled = []
+    for p in paths:
+        labeled.append([{"id": nid, "label": (_ontology.get_concept(nid) or {}).get("label", nid)} for nid in p])
+    return {"paths": labeled}
+
+@app.get("/ontology/quiz")
+def ontology_quiz(category: str = None, difficulty: int = None, limit: int = 3):
+    if not _ontology:
+        return {"error": "ontology not initialized"}
+    return _ontology.quiz(category, difficulty, limit)
+
+@app.post("/agent/chat")
+def agent_chat(body: dict):
+    query = body.get("query", "")
+    history = body.get("history", [])
+    resp = _struct_agent.chat(history, query)
+    return {
+        "query": query,
+        "thoughts": resp.get("thoughts", []),
+        "answer": resp.get("natural_language", ""),
+        "data": resp.get("result"),
+    }
+
 @app.get("/")
 def root():
-    return {"app": "bridge-archetypes-100", "archetypes": len(REGISTRY), "sims": sim_count()}
+    sim_count_val = sim_count()
+    ont_count = _ontology.db.execute("SELECT COUNT(*) FROM concepts").fetchone()[0] if _ontology else 0
+    return {"app": "bridge-archetypes-100", "archetypes": len(REGISTRY), "sims": sim_count_val, "ontology_concepts": ont_count}
 
 
 if __name__ == "__main__":
