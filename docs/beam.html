@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>桁橋の力学 - 構造力学アート | 橋の構造100選</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<a href="index.html" class="back-link">← 構造100選トップ</a>
+
+<div class="page-container">
+<h2 class="page-title"><span class="icon">🏗️</span> 桁橋の力学 (BEAM)</h2>
+<p class="page-desc">
+片持ち梁に荷重をかけた時、どこにどれだけ力がかかる？色彩で「見える化」します。建築士試験2級「構造」の実践編です。
+</p>
+
+<div class="formula-box">
+<div class="math">σ = M / Z = P·L / (b·h²/6)</div>
+<div class="explain">σ: 曲げ応力度(MPa) | M: 曲げモーメント(N·mm) | Z: 断面係数(mm³) | P: 荷重(N) | L: 長さ(mm)</div>
+</div>
+
+<!-- Canvas -->
+<div class="canvas-wrap">
+<canvas id="beamCanvas" width="900" height="400"></canvas>
+</div>
+
+<!-- Controls -->
+<div class="controls">
+<div class="control">
+<label>スパン L (m)</label>
+<input type="range" id="L" min="2" max="10" step="0.5" value="4">
+<div class="value-display" id="Lval">4.0 m</div>
+</div>
+<div class="control">
+<label>梁高 h (mm)</label>
+<input type="range" id="h" min="150" max="800" step="10" value="300">
+<div class="value-display" id="hval">300 mm</div>
+</div>
+<div class="control">
+<label>梁幅 b (mm)</label>
+<input type="range" id="b" min="150" max="500" step="10" value="200">
+<div class="value-display" id="bval">200 mm</div>
+</div>
+<div class="control">
+<label>材料</label>
+<select id="material" style="padding:0.5rem;background:#0f3460;color:#fff;border:none;border-radius:6px;">
+<option value="sugi2">スギ2級 (E=10GPa, fb=12MPa)</option>
+<option value="hinoki">ヒノキ (E=12GPa, fb=14MPa)</option>
+<option value="matsu">マツ (E=11GPa, fb=13MPa)</option>
+<option value="steel">鋼 SM400 (E=200GPa, fb=210MPa)</option>
+<option value="rc">RC (E=30GPa, fb=18MPa)</option>
+</select>
+</div>
+<div class="control" style="grid-column:span 2;">
+<label>荷重 P = <span id="Pval">0</span> N</label>
+<input type="range" id="P" min="0" max="100000" step="500" value="0">
+</div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+<div class="stat-card">
+<div class="label">曲げ応力度 σ</div>
+<div class="value" id="sigmaDisp">0</div>
+<div class="label" style="font-size:0.6rem">MPa</div>
+</div>
+<div class="stat-card">
+<div class="label">許容応力度 fb</div>
+<div class="value" id="fbDisp">12</div>
+<div class="label" style="font-size:0.6rem">MPa</div>
+</div>
+<div class="stat-card">
+<div class="label">σ / fb</div>
+<div class="value" id="ratioDisp">0.00</div>
+</div>
+<div class="stat-card">
+<div class="label">たわみ δ</div>
+<div class="value" id="deltaDisp">0</div>
+<div class="label" style="font-size:0.6rem">mm</div>
+</div>
+<div class="stat-card">
+<div class="label">断面係数 Z</div>
+<div class="value" id="ZDisp">0</div>
+<div class="label" style="font-size:0.6rem">×10⁶ mm³</div>
+</div>
+<div class="stat-card" id="sumoCard">
+<div class="label">相撲力士換算</div>
+<div class="value" id="sumoDisp">0</div>
+<div class="label" style="font-size:0.6rem">人分</div>
+</div>
+<div class="stat-card" id="resultCard">
+<div class="label">判定</div>
+<div class="value" id="resultDisp" style="font-size:1.2rem">OK</div>
+</div>
+</div>
+
+<!-- Sumo Garden -->
+<div class="canvas-wrap" style="text-align:center;margin-top:1.5rem;">
+<h3 style="margin-bottom:0.8rem;color:#a0a0c0;">🥋 相撲力士の数 = 荷重の重さ</h3>
+<div id="sumoGarden" class="sumo-garden"></div>
+<p id="sumoText" style="color:#888;font-size:0.85rem;">力士を増やして橋に挑戦！</p>
+</div>
+
+<!-- What-if formula -->
+<div class="formula-box">
+<div class="math">h_req = √(6·M / b·fb)</div>
+<div class="explain">
+もしσ > fb（破断）なら、こんなに太い梁が必要。赤く染まったら「もっと高さを！」の合図です。
+</div>
+</div>
+
+</div>
+
+<div class="fracture-overlay" id="fractureOverlay"></div>
+
+<footer>
+<p>bridge-archetypes-100 | 建築士試験2級構造対応 | 初心者向け構造力学</p>
+</footer>
+
+<script src="js/beam-art.js"></script>
+</body>
+</html>
