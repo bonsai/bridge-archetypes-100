@@ -10,6 +10,7 @@
   --stress-mid: #ffe66d;
   --stress-high: #ff6b6b;
   --stress-critical: #ff0000;
+  --fundamental: #6c5ce7;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -21,6 +22,53 @@ body {
   line-height: 1.6;
   min-height: 100vh;
   overflow-x: hidden;
+}
+
+/* ===== Section Divider ===== */
+.content-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 0;
+}
+
+.section-fundamental {
+  border-top: 2px solid rgba(108, 92, 231, 0.3);
+  margin-top: 1rem;
+}
+
+.section-header {
+  text-align: center;
+  padding: 2rem 1rem 1rem;
+}
+
+.section-icon {
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+.section-header h2 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-bottom: 0.3rem;
+}
+
+.section-header .section-desc {
+  color: var(--text2);
+  font-size: 0.95rem;
+}
+
+.section-fundamental .section-header h2 {
+  color: #b8b0ff;
+}
+
+.section-fundamental .nav-card.fundamental::before {
+  background: var(--fundamental);
+}
+
+.section-fundamental .nav-card.fundamental .badge {
+  background: rgba(108, 92, 231, 0.2);
+  color: #b8b0ff;
 }
 
 /* Header & Nav */

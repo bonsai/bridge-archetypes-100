@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>はりの力学 — 構造基本 | 橋の構造100選</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<a href="index.html" class="back-link">← 構造100選トップ</a>
+
+<div class="page-container">
+<h2 class="page-title"><span class="icon">📏</span> はりの力学 (CANTILEVER)</h2>
+<p class="page-desc">
+片持ち梁の先端をマウス/タッチで押し下げよう。
+色が変わるのは「応力度」。赤くなるほど危険。白い線（fb）を超えれば💥破断。
+離すと、しなやかに跳ね返る。物理そのもの。
+</p>
+
+<div class="formula-box">
+<div class="math">σ = M / Z = P·L / (b·h²/6)</div>
+<div class="explain">σ: 曲げ応力度(MPa) | M: 曲げモーメント(N·mm) | Z: 断面係数(mm³) | fb: 許容応力度</div>
+</div>
+
+<!-- Canvas -->
+<div class="canvas-wrap" style="position:relative;cursor:grab;padding:0;overflow:hidden;">
+<canvas id="beamCanvas" width="900" height="420" style="display:block;width:100%;"></canvas>
+<div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);color:#889;font-size:0.75rem;pointer-events:none;">
+梁先端（👇 のあたり）をドラッグで押し下げ | 離すと跳ね返り
+</div>
+</div>
+
+<!-- Controls -->
+<div class="controls">
+<div class="control">
+<label>スパン L (m)</label>
+<input type="range" id="L" min="2" max="8" step="0.5" value="4">
+<div class="value-display" id="Lval">4.0 m</div>
+</div>
+<div class="control">
+<label>梁高 h (mm)</label>
+<input type="range" id="h" min="100" max="600" step="10" value="200">
+<div class="value-display" id="hval">200 mm</div>
+</div>
+<div class="control">
+<label>梁幅 b (mm)</label>
+<input type="range" id="b" min="100" max="400" step="10" value="180">
+<div class="value-display" id="bval">180 mm</div>
+</div>
+<div class="control" style="grid-column:span 2;">
+<label>材料</label>
+<select id="material" style="padding:0.5rem;background:#0f3460;color:#fff;border:none;border-radius:6px;">
+<option value="sugi2">スギ2級 (E=10GPa, fb=12MPa)</option>
+<option value="hinoki">ヒノキ (E=12GPa, fb=14MPa)</option>
+<option value="matsu">マツ (E=11GPa, fb=13MPa)</option>
+<option value="steel">鋼 SM400 (E=200GPa, fb=210MPa)</option>
+<option value="pipe">鉄単管パイプ φ48.6 (E=200GPa, fb=160MPa)</option>
+<option value="rc">RC (E=30GPa, fb=18MPa)</option>
+</select>
+<div style="color:#a0a0c0;font-size:0.78rem;margin-top:0.3rem;" id="matDesc">木造建築で最も一般的</div>
+</div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+<div class="stat-card">
+<div class="label">荷重 P</div>
+<div class="value" id="PDisp">0</div>
+<div class="label" style="font-size:0.6rem">N</div>
+</div>
+<div class="stat-card">
+<div class="label">曲げ応力度 σ</div>
+<div class="value" id="sigmaDisp">0</div>
+<div class="label" style="font-size:0.6rem">MPa</div>
+</div>
+<div class="stat-card">
+<div class="label">許容応力度 fb</div>
+<div class="value" id="fbDisp">12</div>
+<div class="label" style="font-size:0.6rem">MPa</div>
+</div>
+<div class="stat-card">
+<div class="label">σ / fb</div>
+<div class="value" id="ratioDisp">0.00</div>
+</div>
+<div class="stat-card">
+<div class="label">たわみ δ</div>
+<div class="value" id="deltaDisp">0</div>
+<div class="label" style="font-size:0.6rem">mm</div>
+</div>
+<div class="stat-card">
+<div class="label">断面係数 Z</div>
+<div class="value" id="ZDisp">0</div>
+<div class="label" style="font-size:0.6rem">×10⁶ mm³</div>
+</div>
+<div class="stat-card" id="resultCard">
+<div class="label">判定</div>
+<div class="value" id="resultDisp" style="font-size:1.2rem">✅ OK</div>
+</div>
+</div>
+
+<!-- Stress Range Guide -->
+<div class="formula-box" style="background:rgba(78,205,196,0.05);border-left-color:#6c5ce7;">
+<div class="explain">
+<strong>応力度レンジ:</strong><br>
+<span style="color:#4ecdc4">安全（σ/fb ≤ 0.3）</span> → 
+<span style="color:#ffe66d">注意（0.3~0.6）</span> → 
+<span style="color:#ff6b6b">危険（0.6~0.85）</span> → 
+<span style="color:#ff0000">破断寸前（0.85~1.0）</span> → 
+<span style="color:#ff0000"><b>💥 破断（&gt;1.0）</b></span><br>
+破断後は剛性が急低下し、梁が折れたままになる。
+</div>
+</div>
+
+</div>
+
+<div class="fracture-overlay" id="fractureOverlay"></div>
+
+<footer>
+<p>bridge-archetypes-100 | 構造力学基礎 | 2級建築士試験対応</p>
+</footer>
+
+<script src="js/beam-fundamentals.js"></script>
+</body>
+</html>

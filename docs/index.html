@@ -7,10 +7,19 @@
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+
 <header>
 <h1>橋の構造100選</h1>
 <p class="subtitle">構造力学 × ビジュアルアート — 初心者向けインタラクティブ学習</p>
 </header>
+
+<!-- Section 1: 橋構造コンテンツ -->
+<section class="content-section">
+<div class="section-header">
+<span class="section-icon">🏗️</span>
+<h2>橋の構造タイプ</h2>
+<p class="section-desc">世界の様々な橋の構造形式を可視化</p>
+</div>
 
 <nav class="nav-grid">
 <a href="beam.html" class="nav-card beam">
@@ -37,6 +46,24 @@
 <p>三角形のパズル。メンバー力の色分けで一目瞭然。</p>
 <span class="badge">入門</span>
 </a>
+</nav>
+</section>
+
+<!-- Section 2: 構造基本コンテンツ -->
+<section class="content-section section-fundamental">
+<div class="section-header">
+<span class="section-icon">📐</span>
+<h2>構造力学の基礎</h2>
+<p class="section-desc">建築・構造設計の核心を直感的に学ぶ</p>
+</div>
+
+<nav class="nav-grid">
+<a href="beam-fundamentals.html" class="nav-card fundamental">
+<div class="icon">📏</div>
+<h2>はりの力学 (Fundamentals)</h2>
+<p>曲げ応力・たわみ・破断まで。ドラッグで体感する物理シミュレーション。</p>
+<span class="badge">基礎</span>
+</a>
 <a href="sumo.html" class="nav-card sumo">
 <div class="icon">🥋</div>
 <h2>相撲力士 Simulator</h2>
@@ -50,6 +77,7 @@
 <span class="badge">アート</span>
 </a>
 </nav>
+</section>
 
 <footer>
 <p>bridge-archetypes-100 — <a href="https://bonsai.github.io/bridge-archetypes-100/">GitHub Pages</a> | 2級建築士試験対応</p>
@@ -57,7 +85,6 @@
 
 <script src="js/data.js"></script>
 <script>
-// Simple entrance animation
 document.querySelectorAll('.nav-card').forEach((c,i)=>{
     c.style.opacity = '0';
     c.style.transform = 'translateY(30px)';
