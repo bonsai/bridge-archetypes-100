@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>力の可視化 — 構造力学基礎 | 橋の構造100選</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.force-canvas-wrap { background: var(--panel); border-radius: 16px; padding: 1rem; margin-bottom: 1rem; border: 1px solid rgba(255,255,255,0.06); }
+.force-canvas-wrap canvas { width: 100%; display: block; border-radius: 8px; background: #0a0a1a; }
+.force-tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.force-tabs button { background: var(--panel); border: 1px solid rgba(255,255,255,0.08); color: var(--text); padding: 0.5rem 1.2rem; border-radius: 8px; cursor: pointer; font-size: 0.85rem; }
+.force-tabs button:hover { border-color: #e94560; }
+.force-tabs button.active { background: rgba(233,69,96,0.2); border-color: #e94560; }
+.force-legend { display: flex; gap: 1.5rem; font-size: 0.78rem; color: var(--text2); flex-wrap: wrap; padding: 0.5rem 0; }
+.force-legend span { display: flex; align-items: center; gap: 0.3rem; }
+.force-legend i { display: inline-block; width: 16px; height: 3px; }
+.formula-highlight { background: rgba(78,205,196,0.1); border-left: 3px solid #4ecdc4; padding: 0.8rem 1rem; border-radius: 0 8px 8px 0; margin: 1rem 0; font-family: monospace; }
+</style>
+</head>
+<body>
+
+<a href="index.html" class="back-link">← 構造100選トップ</a>
+
+<div class="page-container">
+<h2 class="page-title"><span class="icon">⚡</span> 力の可視化 — S図とM図</h2>
+<p class="page-desc">
+梁にかかる力を数式とグラフで直感化。2級建築士試験の核心「せん断力図」と「曲げモーメント図」をアニメーションで描画。
+</p>
+
+<div class="force-tabs">
+<button class="active" data-mode="uniform">均布荷重 w (常時)</button>
+<button data-mode="point">集中荷重 P (端部)</button>
+<button data-mode="cantilever">片持ち梁 + 集中荷重</button>
+</div>
+
+<div class="force-canvas-wrap">
+<canvas id="forceCanvas" width="900" height="500"></canvas>
+</div>
+
+<div class="force-legend">
+<span><i style="background:#4ecdc4"></i> せん断力 S</span>
+<span><i style="background:#ffe66d"></i> 曲げモーメント M</span>
+<span><i style="background:#e94560"></i> 荷重・反力</span>
+<span><i style="background:#fff"></i> 梁形状</span>
+</div>
+
+<div class="formula-highlight" id="formulaBox">
+<strong>均布荷重 w [N/mm] の単純梁 (スパンL):</strong><br>
+最大せん断力 Smax = wL/2 &nbsp;|&nbsp; 最大曲げモーメント Mmax = wL²/8 &nbsp;|&nbsp; 反力 R = wL/2
+</div>
+
+<div class="stats-grid">
+<div class="stat-card"><div class="label">Smax</div><div class="value" id="smax">0</div><div class="label" style="font-size:0.6rem">kN</div></div>
+<div class="stat-card"><div class="label">Mmax</div><div class="value" id="mmax">0</div><div class="label" style="font-size:0.6rem">kN·m</div></div>
+<div class="stat-card"><div class="label">反力 R</div><div class="value" id="reaction">0</div><div class="label" style="font-size:0.6rem">kN</div></div>
+<div class="stat-card"><div class="label">たわみ δmax</div><div class="value" id="dmax">0</div><div class="label" style="font-size:0.6rem">mm</div></div>
+</div>
+
+<div class="controls" style="margin-top:1rem;">
+<div class="control"><label>スパン L (m)</label><input type="range" id="L" min="2" max="12" step="0.5" value="6"><div class="value-display" id="Lval">6.0 m</div></div>
+<div class="control"><label>荷重 w/P (kN)</label><input type="range" id="P" min="5" max="100" step="1" value="20"><div class="value-display" id="Pval">20 kN</div></div>
+<div class="control"><label>ヤング率 E (GPa)</label>
+<select id="Esel" style="padding:0.5rem;background:#0f3460;color:#fff;border:none;border-radius:6px;">
+<option value="10">スギ 10</option><option value="30">RC 30</option><option value="200" selected>鋼 200</option>
+</select></div>
+<div class="control"><label>断面 h×b (mm)</label><input type="range" id="hb" min="150" max="600" step="10" value="300"><div class="value-display" id="hbval">300×200</div></div>
+</div>
+
+</div>
+
+<footer><p>bridge-archetypes-100 | 2級建築士試験対応 | S図・M図の暗記</p></footer>
+
+<script>
+const canvas = document.getElementById('forceCanvas');
+const ctx = canvas.getContext('2d');
+let mode = 'uniform';
+let t = 0;
+
+let L=6000, Pval=20000, E=200000, h=300, b=200;
+let animProgress = 0;
+
+document.querySelectorAll('.force-tabs button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.force-tabs button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    mode=btn.dataset.mode;
+    animProgress=0;
+    updateFormula();
+  });
+});
+
+function updateFormula(){
+  const box=document.getElementById('formulaBox');
+  if(mode==='uniform'){
+    box.innerHTML='<strong>単純梁 + 均布荷重 w:</strong><br>Smax = wL/2 | Mmax = wL²/8 | δmax = 5wL⁴/(384EI)';
+  } else if(mode==='point'){
+    box.innerHTML='<strong>単純梁 + 中央集中荷重 P:</strong><br>Smax = P/2 | Mmax = PL/4 | δmax = PL³/(48EI)';
+  } else {
+    box.innerHTML='<strong>片持ち梁 + 先端集中荷重 P:</strong><br>Smax = P | Mmax = PL | δmax = PL³/(3EI)';
+  }
+}
+
+function drawGrid(mx,my,w,h){
+  ctx.strokeStyle='rgba(100,100,150,0.15)'; ctx.lineWidth=1;
+  for(let i=0;i<=5;i++){ ctx.beginPath(); ctx.moveTo(mx,my+h*i/5); ctx.lineTo(mx+w,my+h*i/5); ctx.stroke(); }
+  for(let i=0;i<=10;i++){ ctx.beginPath(); ctx.moveTo(mx+w*i/10,my); ctx.lineTo(mx+w*i/10,my+h); ctx.stroke(); }
+}
+
+function drawBeam(mx,my,w,h,defArray){
+  ctx.fillStyle='rgba(255,255,255,0.08)';
+  ctx.fillRect(mx,my-20,w,40);
+  ctx.strokeStyle='#fff'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(mx,my-20); ctx.lineTo(mx+w,my-20); ctx.lineTo(mx+w,my+20); ctx.lineTo(mx,my+20); ctx.closePath(); ctx.stroke();
+  // supports
+  ctx.fillStyle='#556'; ctx.beginPath(); ctx.moveTo(mx-8,my+20); ctx.lineTo(mx+8,my+20); ctx.lineTo(mx,my+38); ctx.closePath(); ctx.fill();
+  if(mode!=='cantilever'){
+    ctx.beginPath(); ctx.moveTo(mx+w-8,my+20); ctx.lineTo(mx+w+8,my+20); ctx.lineTo(mx+w,my+38); ctx.closePath(); ctx.fill();
+  } else {
+    ctx.fillStyle='#556'; ctx.fillRect(mx-14,my-30,10,60);
+    ctx.strokeStyle='#778'; for(let i=-3;i<=3;i++){ ctx.beginPath(); ctx.moveTo(mx-14,my+i*8); ctx.lineTo(mx-4,my+i*8+3); ctx.stroke(); }
+  }
+}
+
+function drawArrow(x1,y1,x2,y2,color='fff',label=''){
+  ctx.strokeStyle=color; ctx.fillStyle=color; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  const ang=Math.atan2(y2-y1,x2-x1);
+  ctx.beginPath(); ctx.moveTo(x2,y2); ctx.lineTo(x2-8*Math.cos(ang-0.4),y2-8*Math.sin(ang-0.4));
+  ctx.lineTo(x2-8*Math.cos(ang+0.4),y2-8*Math.sin(ang+0.4)); ctx.closePath(); ctx.fill();
+  if(label){ ctx.font='11px sans-serif'; ctx.fillText(label,x2+6,y2+4); }
+}
+
+function drawGraph(mx,my,w,h,data,color,label,maxVal){
+  const scale=h*0.45/maxVal;
+  ctx.strokeStyle=color; ctx.lineWidth=2.5;
+  ctx.beginPath(); ctx.moveTo(mx,my);
+  for(let i=0;i<=100;i++){
+    const xi=mx+w*i/100;
+    const yi=my-data[i]*scale*animProgress;
+    ctx.lineTo(xi,yi);
+  }
+  ctx.stroke();
+  ctx.fillStyle=color; ctx.font='bold 12px sans-serif';
+  ctx.fillText(label,mx+w+8,my-5);
+}
+
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const W=canvas.width, H=canvas.height;
+  const mx=60, my=60, w=W-mx*2, hRow=(H-120)/3;
+
+  const I=b*h*h*h/12;
+  let S=[], M=[], sm=0, mm=0, dm=0, R=0;
+  const N=100;
+
+  if(mode==='uniform'){
+    const wu=Pval/L;
+    R=wu*L/2;
+    sm=wu*L/2; mm=wu*L*L/8; dm=5*wu*L*L*L*L/(384*E*I);
+    for(let i=0;i<=N;i++){
+      const x=i*L/N;
+      S.push(R-wu*x);
+      M.push(R*x-wu*x*x/2);
+    }
+  } else if(mode==='point'){
+    R=Pval/2;
+    sm=Pval/2; mm=Pval*L/4; dm=Pval*L*L*L/(48*E*I);
+    for(let i=0;i<=N;i++){
+      const x=i*L/N;
+      S.push(x<L/2?R:R-Pval);
+      M.push(x<L/2?R*x:R*(L-x));
+    }
+  } else {
+    R=Pval;
+    sm=Pval; mm=Pval*L; dm=Pval*L*L*L/(3*E*I);
+    for(let i=0;i<=N;i++){
+      const x=i*L/N;
+      S.push(Pval);
+      M.push(Pval*(L-x));
+    }
+  }
+
+  // Row 1: Beam + loads
+  drawGrid(mx,my,w,hRow);
+  drawBeam(mx,my+hRow*0.5,w,40);
+  if(mode==='uniform'){
+    for(let i=0;i<10;i++) drawArrow(mx+w*(i+0.5)/10,my+hRow*0.5-20,mx+w*(i+0.5)/10,my+hRow*0.5-50,'#e94560');
+  } else if(mode==='point'){
+    drawArrow(mx+w/2,my+hRow*0.5-20,mx+w/2,my+hRow*0.5-70,'#e94560',`${(Pval/1000).toFixed(1)}kN`);
+  } else {
+    drawArrow(mx+w-5,my+hRow*0.5-20,mx+w-5,my+hRow*0.5-70,'#e94560',`${(Pval/1000).toFixed(1)}kN`);
+  }
+  // Reactions
+  drawArrow(mx,my+hRow*0.5+38,mx,my+hRow*0.5+20,'#e94560');
+  if(mode!=='cantilever') drawArrow(mx+w,my+hRow*0.5+38,mx+w,my+hRow*0.5+20,'#e94560');
+  ctx.fillStyle='#e94560'; ctx.font='bold 12px sans-serif';
+  ctx.fillText(`R=${(R/1000).toFixed(1)}kN`,mx-10,my+hRow*0.5+55);
+
+  // Row 2: Shear
+  const my2=my+hRow+15;
+  drawGrid(mx,my2,w,hRow-10);
+  ctx.strokeStyle='rgba(78,205,196,0.3)'; ctx.setLineDash([3,3]); ctx.beginPath(); ctx.moveTo(mx,my2); ctx.lineTo(mx+w,my2); ctx.stroke(); ctx.setLineDash([]);
+  drawGraph(mx,my2,w,hRow-10,S,'#4ecdc4','S図',sm);
+  ctx.fillStyle='#4ecdc4'; ctx.fillText(`Smax=${(sm/1000).toFixed(1)}kN`,mx+8,my2+25);
+
+  // Row 3: Moment
+  const my3=my+hRow*2+30;
+  drawGrid(mx,my3,w,hRow-10);
+  ctx.strokeStyle='rgba(255,230,109,0.3)'; ctx.setLineDash([3,3]); ctx.beginPath(); ctx.moveTo(mx,my3); ctx.lineTo(mx+w,my3); ctx.stroke(); ctx.setLineDash([]);
+  drawGraph(mx,my3,w,hRow-10,M,'#ffe66d','M図',mm);
+  ctx.fillStyle='#ffe66d'; ctx.fillText(`Mmax=${(mm/1000000).toFixed(2)}kN·m`,mx+8,my3+25);
+
+  document.getElementById('smax').textContent=(sm/1000).toFixed(1);
+  document.getElementById('mmax').textContent=(mm/1000000).toFixed(2);
+  document.getElementById('reaction').textContent=(R/1000).toFixed(1);
+  document.getElementById('dmax').textContent=(dm).toFixed(2);
+
+  if(animProgress<1){ animProgress+=0.02; }
+  requestAnimationFrame(draw);
+}
+
+function updateState(){
+  L=parseFloat(document.getElementById('L').value)*1000;
+  Pval=parseFloat(document.getElementById('P').value)*1000;
+  E=parseFloat(document.getElementById('Esel').value)*1000;
+  h=parseInt(document.getElementById('hb').value);
+  b=Math.round(h*0.667);
+  animProgress=0;
+  document.getElementById('Lval').textContent=(L/1000).toFixed(1)+' m';
+  document.getElementById('Pval').textContent=(Pval/1000).toFixed(0)+' kN';
+  document.getElementById('hbval').textContent=h+'×'+b;
+}
+['L','P','hb'].forEach(id=>document.getElementById(id).addEventListener('input',updateState));
+document.getElementById('Esel').addEventListener('change',updateState);
+
+updateState(); updateFormula(); draw();
+</script>
+
+</body>
+</html>
