@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>構造概念ワードクラウド | 橋の構造100選</title>
+<style>
+:root { --dark: #0a0a1a; --panel: #16162a; --text: #eaeaea; --text2: #a0a0c0; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Noto Sans JP', -apple-system, sans-serif;
+  background: var(--dark); color: var(--text); min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center;
+}
+header { text-align: center; padding: 2rem 1rem 1rem; }
+header h1 { font-size: 1.6rem; background: linear-gradient(90deg, #e94560, #ff8e8e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+header p { color: var(--text2); font-size: 0.9rem; margin-top: 0.3rem; }
+#controls {
+  display: flex; gap: 0.8rem; flex-wrap: wrap; justify-content: center;
+  padding: 0 1rem 1rem;
+}
+#controls button {
+  background: var(--panel); border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text); padding: 0.4rem 1rem; border-radius: 20px;
+  cursor: pointer; font-size: 0.8rem; transition: all 0.2s;
+}
+#controls button:hover { border-color: #e94560; }
+#controls button.active { background: rgba(233,69,96,0.2); border-color: #e94560; }
+#cloudWrap { position: relative; width: 95vw; max-width: 1100px; aspect-ratio: 16/10; background: var(--panel); border-radius: 16px; border: 1px solid rgba(255,255,255,0.06); overflow: hidden; }
+#cloud { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+#legend {
+  display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;
+  padding: 1rem; font-size: 0.75rem; color: var(--text2);
+}
+#legend span { display: flex; align-items: center; gap: 0.3rem; }
+#legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+.back-link { color: #e94560; text-decoration: none; font-weight: 600; margin: 1rem 0; }
+#loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); color: var(--text2); font-size: 0.9rem; }
+</style>
+</head>
+<body>
+
+<a href="index.html" class="back-link">← 構造100選トップ</a>
+
+<header>
+<h1>構造概念ワードクラウド</h1>
+<p>橋の構造100選オントロジーから概念ネットワークを可視化</p>
+</header>
+
+<div id="controls">
+<button data-filter="all" class="active">すべて</button>
+<button data-filter="StructuralElement">部材</button>
+<button data-filter="ForceType">力</button>
+<button data-filter="MaterialClass">材料</button>
+<button data-filter="BridgeFamily">橋種</button>
+<button data-filter="FailureMode">破壊モード</button>
+<button data-filter="LoadType">荷重</button>
+</div>
+
+<div id="cloudWrap">
+<canvas id="cloud"></canvas>
+<div id="loading">オントロジー読み込み中...</div>
+</div>
+
+<div id="legend">
+<span><i style="background:#e94560"></i> 部材・構造要素</span>
+<span><i style="background:#4ecdc4"></i> 力・応力</span>
+<span><i style="background:#ffe66d"></i> 材料</span>
+<span><i style="background:#74b9ff"></i> 橋種</span>
+<span><i style="background:#ff6b6b"></i> 破壊モード</span>
+<span><i style="background:#a29bfe"></i> 荷重・外力</span>
+<span><i style="background:#fff"></i> 試験・出題</span>
+</div>
+
+<script>
+const CAT_COLORS = {
+  StructuralElement: '#e94560',
+  ForceType:         '#4ecdc4',
+  MaterialClass:     '#ffe66d',
+  BridgeFamily:      '#74b9ff',
+  FailureMode:       '#ff6b6b',
+  LoadType:          '#a29bfe',
+  Exam:              '#fff',
+  default:           '#a0a0c0'
+};
+
+function getColor(cat, freq) {
+  if (freq === '非常高') return '#fff';
+  return CAT_COLORS[cat] || CAT_COLORS.default;
+}
+
+function extractWords(data) {
+  const words = [];
+  const seen = new Set();
+  function add(text, weight, color, cat) {
+    if (!text || seen.has(text)) return;
+    seen.add(text);
+    words.push({text, weight, color, cat});
+  }
+
+  // Taxonomy
+  for (const [catName, catData] of Object.entries(data.taxonomy || {})) {
+    add(catName, 22, CAT_COLORS[catName] || CAT_COLORS.default, catName);
+    if (catData.subclasses) {
+      for (const [subName, subData] of Object.entries(catData.subclasses)) {
+        const ja = subData.ja || subName;
+        const w = subData.exam_freq === '非常高' ? 26 : subData.exam_freq === '高' ? 20 : 16;
+        add(ja, w, getColor(catName, subData.exam_freq), catName);
+        // Examples
+        (subData.examples || []).forEach(e => add(e, 10, getColor(catName), catName));
+        (subData.examples_wood || []).forEach(e => add(e, 10, '#d4a574', catName));
+        (subData.examples_steel || []).forEach(e => add(e, 10, '#789', catName));
+        // Properties
+        if (subData.dominant_force) add(subData.dominant_force, 12, '#4ecdc4', 'ForceType');
+        if (subData.formula) add(subData.formula, 9, '#a0a0c0', catName);
+        if (subData.advantage) add(subData.advantage, 10, '#a0a0c0', catName);
+        if (subData.disadvantage) add(subData.disadvantage, 10, '#a0a0c0', catName);
+        if (subData.types) subData.types.forEach(t => add(t, 11, getColor(catName), catName));
+        // Material keys
+        (subData.keys || []).forEach(k => add(k, 10, getColor(catName), catName));
+      }
+    }
+  }
+
+  // Knowledge graph
+  (data.knowledge_graph?.edges || []).forEach(e => {
+    add(e.rel, 8, '#888', null);
+    if (e.note) add(e.note, 7, '#888', null);
+  });
+
+  // Pedagogy priority
+  for (const [k, v] of Object.entries(data.pedagogy?.priority || {})) {
+    add(k.replace(/_/g, ' '), 10 + v * 0.8, '#ffe66d', 'Exam');
+  }
+
+  // Inference rules
+  (data.inference_rules || []).forEach((r, i) => {
+    if (r.then) add(String(r.then), 8, '#a0a0c0', null);
+    if (r.action) add(r.action, 8, '#a0a0c0', null);
+  });
+
+  return words;
+}
+
+function drawCloud(allWords, filterCat) {
+  const canvas = document.getElementById('cloud');
+  const wrap = document.getElementById('cloudWrap');
+  canvas.width = wrap.clientWidth * 2;
+  canvas.height = wrap.clientHeight * 2;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const words = filterCat === 'all'
+    ? allWords
+    : allWords.filter(w => w.cat === filterCat);
+
+  words.sort((a, b) => b.weight - a.weight);
+
+  const placed = [];
+  const W = canvas.width, H = canvas.height;
+  const cx = W / 2, cy = H / 2;
+
+  for (const w of words) {
+    const fontSize = 14 + w.weight * 1.8;
+    ctx.font = `700 ${fontSize}px 'Noto Sans JP', sans-serif`;
+    const metrics = ctx.measureText(w.text);
+    const tw = metrics.width, th = fontSize;
+
+    // Spiral placement
+    let x = cx, y = cy, angle = 0, radius = 0;
+    const dAngle = 0.6, gap = 12;
+    let placedOk = false;
+
+    for (let iter = 0; iter < 2500; iter++) {
+      let collide = false;
+      for (const p of placed) {
+        if (Math.abs(x - p.x) < (tw + p.w) / 2 + 4 &&
+            Math.abs(y - p.y) < (th + p.h) / 2 + 4) {
+          collide = true; break;
+        }
+      }
+      if (!collide) { placedOk = true; break; }
+      angle += dAngle;
+      radius += gap * dAngle / (2 * Math.PI);
+      x = cx + radius * Math.cos(angle);
+      y = cy + radius * Math.sin(angle) * 0.75; // oval
+    }
+
+    if (!placedOk) continue;
+    placed.push({x, y, w: tw, h: th});
+
+    // Draw with subtle shadow
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.fillText(w.text, x + 2, y + 2);
+    ctx.fillStyle = w.color;
+    ctx.globalAlpha = Math.min(0.9, 0.5 + w.weight / 40);
+    ctx.fillText(w.text, x, y);
+    ctx.restore();
+  }
+}
+
+async function init() {
+  document.getElementById('loading').style.display = 'block';
+  const res = await fetch('data/bridge-ontology.json');
+  const data = await res.json();
+  document.getElementById('loading').style.display = 'none';
+
+  const allWords = extractWords(data);
+  let currentFilter = 'all';
+
+  drawCloud(allWords, currentFilter);
+
+  // Buttons
+  document.querySelectorAll('#controls button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#controls button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFilter = btn.dataset.filter;
+      drawCloud(allWords, currentFilter);
+    });
+  });
+
+  // Resize
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => drawCloud(allWords, currentFilter), 200);
+  });
+}
+
+init().catch(err => {
+  document.getElementById('loading').textContent = '読み込み失敗: ' + err.message;
+});
+</script>
+
+</body>
+</html>
