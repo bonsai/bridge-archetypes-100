@@ -1,0 +1,135 @@
+{
+  "$schema": "bridge-ontology-v1",
+  "title": "建築・構造力学オントロジー — 橋の構造100選",
+  "description": "構造概念間の関係ネットワーク。建築士試験（2級構造）対応。機械的パラメータ(bridge-data.json)と連携。",
+
+  "namespaces": {
+    "bo":   "https://bonsai.github.io/bridge-archetypes-100/ontology#",
+    "bmat": "https://bonsai.github.io/bridge-archetypes-100/material#",
+    "exam": "https://bonsai.github.io/bridge-archetypes-100/exam#",
+    "law":  "https://bonsai.github.io/bridge-archetypes-100/law#"
+  },
+
+  "taxonomy": {
+    "StructuralElement": {
+      "subclasses": {
+        "BeamMember":     {"ja":"梁・はり","examples":["片持ち梁","単純梁","連続梁","合成梁","T桁","箱桁","I桁"],"dominant_force":"BendingMoment"},
+        "ColumnMember":   {"ja":"柱","examples":["短柱","長柱","RC柱","S柱","木柱"],"dominant_force":"AxialCompression"},
+        "ArchMember":     {"ja":"アーチ","examples":["二ヒンジアーチ","固定アーチ","ランジアーチ"],"dominant_force":"AxialCompression"},
+        "CableMember":    {"ja":"ケーブル","examples":["メインケーブル","ハンガーロープ","斜材"],"dominant_force":"AxialTension"},
+        "SlabMember":     {"ja":"床板・スラブ","examples":["RC一方向スラブ","RC両方向スラブ","合成床板"],"dominant_force":"BendingMoment"},
+        "Bearing":        {"ja":"支承","examples":["固定支承","可動支承","ラバー支承"],"function":"反力伝達・たわみ許容"},
+        "Foundation":     {"ja":"基礎","examples":["直接基礎","杭基礎","井筒基礎","マット基礎"],"function":"構造荷重→地盤"},
+        "TrussMember":    {"ja":"トラス部材","examples":["ワーレン・トラス","プラット・トラス"],"dominant_force":"AxialForce","analysis":"接点法・切断法"},
+        "Connection":     {"ja":"接合部","examples_wood":["蟻形結合","ほぞ栓","ダボ","隅木"],"examples_steel":["高力ボルト","溶接","継手板"],"bottleneck":"構造性能の不安定要素"}
+      }
+    },
+    "ForceType": {
+      "subclasses": {
+        "AxialForce":     {"ja":"軸方向力","direction":["tension","compression"]},
+        "BendingMoment":  {"ja":"曲げモーメント","resists_by":"断面係数Z","formula":"M=qL²/8(均布)"},
+        "ShearForce":     {"ja":"せん断力","resists_by":"有効断面積Aw"},
+        "TorsionalMoment":{"ja":"ねじりモーメント","resists_by":"ねじり定数J"},
+        "Reaction":       {"ja":"反力","kind":["垂直反力","水平反力","反力モーメント"]}
+      }
+    },
+    "MaterialClass": {
+      "subclasses": {
+        "Wood":           {"ja":"木材","E_N_mm2":8000,"den_kg_m3":500,"plastic":false,"thermal":4.5e-6,"keys":["強度異方性","含水率依存","腐朽劣化"],"exam_freq":"高"},
+        "Steel":          {"ja":"鋼材","E_N_mm2":205000,"den_kg_m3":7850,"plastic":true,"thermal":1.2e-5,"keys":["降伏","座屈","疲労"],"exam_freq":"非常高"},
+        "Concrete":       {"ja":"コンクリート","E_N_mm2":23500,"den_kg_m3":2300,"plastic":false,"thermal":1.0e-5,"keys":["圧縮強度大","引張弱","クリープ"],"exam_freq":"非常高"},
+        "RC":             {"ja":"鉄筋コンクリート","E_derived":"2.35e4","keys":["鉄筋拘束","かぶり厚","ダクタリティ"],"exam_freq":"非常高"},
+        "SRC":            {"ja":"鉄骨鉄筋コンクリート","keys":["複合","局部座屈抑制"],"exam_freq":"中"},
+        "Glulam":         {"ja":"構造用集成材","E_N_mm2":10000,"keys":["等方性近似","ばり欠け"],"exam_freq":"中"}
+      }
+    },
+    "BridgeFamily": {
+      "subclasses": {
+        "SimpleBeam":     {"ja":"単純桁","dominant_force":"BendingMoment","slenderness":"L/d<15","materials":["RC","S"]},
+        "ContinuousBeam": {"ja":"連続桁","advantage":"たわみ・応力度低減","disadvantage":"温度変化による固定圧力"},
+        "ArchBridge":     {"ja":"アーチ橋","dominant_force":"AxialCompression","advantage":"全断面利用","types":["deck_arch","through_arch","half_through"]},
+        "Suspension":     {"ja":"吊り橋","dominant_force":"AxialTension","max_span_m":2000,"cable_curve":"放物線近似","wind_risk":"高"},
+        "TrussBridge":    {"ja":"トラス橋","dominant_force":"AxialForce","connection":"ピン接合(理想)"},
+        "CableStayed":    {"ja":"斜張橋","cable_pattern":["ハープ型","扇型","ラジアル型"]},
+        "RigidFrame":     {"ja":"ラーメン橋","advantage":"円滑な力の流れ","earthquake":"高"},
+        "MovableBridge":  {"ja":"可動橋","types":["bascule","swing","lift"]}
+      }
+    },
+    "FailureMode": {
+      "subclasses": {
+        "Yield":          {"ja":"降伏","precondition":"σ>fy","sign":"大変形","ok":"地震時のみ可"},
+        "Fracture":       {"ja":"破断","precondition":"σ>fu","result":"構造分離","ok":"決して"},
+        "Buckling":       {"ja":"座屈","subtypes":["Euler","局部座屈","全体座屈","横座屈"]},
+        "ExcessiveDeflection":{"ja":"過剰たわみ","limit":"L/250","domain":"使用性"},
+        "SoilLiquefaction":{"ja":"地盤液状化","trigger":"地震","sand_N":"N<10危険"},
+        "PunchingShear":  {"ja":"引抜きせん断","RC":"柱頭・柱脚"}
+      }
+    },
+    "LoadType": {
+      "subclasses": {
+        "DeadLoad":       {"ja":"固定荷重","unit_kN_m2":{"RC屋根":"4.5","S造床":"2.0","木造床":"1.5"}},
+        "LiveLoad":       {"ja":"積載荷重","spec":"住宅1.8, 事務所2.9(kN/m2)"},
+        "SnowLoad":       {"ja":"積雪荷重","formula":"S=Cs·Z·As"},
+        "WindLoad":       {"ja":"風圧","formula":"q=0.6·E·V²","bridge":"長大橋は風振動"},
+        "SeismicLoad":    {"ja":"地震荷重","formula":"Ci=Z·Rt·Ai·C0","methods":["壁量計算","α法"]},
+        "ImpactLoad":     {"ja":"衝撃荷重","bridge":"走行車両の動的増大"}
+      }
+    }
+  },
+
+  "knowledge_graph": {
+    "edges": [
+      {"from":"BeamMember","rel":"transmits","to":"BendingMoment","how":"荷重→反力→M図"},
+      {"from":"BeamMember","rel":"transmits","to":"ShearForce","how":"荷重の端部差→S図"},
+      {"from":"BeamMember","rel":"property","to":"SectionModulus","formula":"Z=bh²/6","unit":"mm³"},
+      {"from":"BeamMember","rel":"resists","to":"Yield","check":"σ=M/Z≤fb"},
+      {"from":"BeamMember","rel":"checks","to":"ExcessiveDeflection","limit":"δ≤L/250"},
+      {"from":"SimpleBeam","rel":"is_a","to":"BeamMember"},
+      {"from":"SimpleBeam","rel":"generates","to":"Reaction"},
+      {"from":"Cantilever","rel":"is_a","to":"BeamMember"},
+      {"from":"Cantilever","rel":"max_stress_at","to":"fixed_end","note":"固定端で最大"},
+      {"from":"Cantilever","rel":"deflection","to":"3PL3/Ebh3","load":"先端集中荷重"},
+      {"from":"ArchBridge","rel":"converts","to":"BendingMoment","into":"AxialCompression"},
+      {"from":"Suspension","rel":"carries","to":"CableMember","how":"Hanger rope→Main cable"},
+      {"from":"TrussBridge","rel":"idealizes","to":"PinJointedFrame","method":["節点法","切断法"]},
+      {"from":"Wood","rel":"limited_by","to":"Connection","note":"接合がボトルネック"},
+      {"from":"RC","rel":"prevents","to":"PunchingShear","with":"箍筋(スターラップ)"},
+      {"from":"RC","rel":"condition","to":"NeutralAxis","limit":"x<0.6d"},
+      {"from":"Steel","rel":"governed_by","to":"Buckling","check":"λ, lk, ν"},
+      {"from":"Foundation","rel":"checks","to":"BearingCapacity","formula":"qa=Qa/A","law":"建築基準法施行令第89条"},
+      {"from":"SoilLiquefaction","rel":"affects","to":"Foundation","measure":["地盤改良","杭基礎"]},
+      {"from":"Exam_2kyu","rel":"covers","to":"MomentDiagram","score":10},
+      {"from":"Exam_2kyu","rel":"covers","to":"Buckling","score":9},
+      {"from":"Exam_2kyu","rel":"covers","to":"RC_SectionDesign","score":9},
+      {"from":"Exam_2kyu","rel":"covers","to":"Timber_Joints","score":7},
+      {"from":"Exam_2kyu","rel":"covers","to":"Soil_Bearing","score":7},
+      {"from":"Exam_2kyu","rel":"covers","to":"Seismic_WallDesign","score":8}
+    ]
+  },
+
+  "inference_rules": [
+    {"if":"σ>fb","then":"Fracture","priority":1},
+    {"if":"σ/fb>0.85","then":"危険","action":"寸法増大 or 材料変更","priority":2},
+    {"if":{"λ":">100","mat":"Steel"},"then":"座屈支配","priority":1},
+    {"if":{"span_m":">20","mat":"Wood"},"then":"Glulam or S造推奨"},
+    {"if":{"N":">=10","soil":"sand","quake":true},"then":"液状化リスク","measure":["排水","抗液化処理"]},
+    {"if":{"civil":true,"type":"Suspension","wind_ms":">30"},"then":"風振動リスク","check":"風洞試験"}
+  ],
+
+  "pedagogy": {
+    "deps": [
+      ["断面二次モーメントI", "断面係数Z"],
+      ["断面係数Z", "曲げ応力度σ"],
+      ["せん断力図S", "曲げモーメント図M"],
+      ["座屈長sk", "細長比λ", "座屈係数ν"],
+      ["N値", "支持力qa"],
+      ["水平地震力Ci", "層せん断力Qi", "壁平均せん断応力度τm"]
+    ],
+    "priority": {
+      "MomentDiagram": 10, "ShearDiagram": 10,
+      "RC_SectionDesign": 9, "Buckling": 9,
+      "Seismic_WallDesign": 8, "Soil_Bearing": 7,
+      "Timber_Joints": 7
+    }
+  }
+}
