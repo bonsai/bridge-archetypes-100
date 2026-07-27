@@ -3,23 +3,234 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>準備中 | 橋の構造100選</title>
+<title>応力アート — 4種の応力を色で体感 | 橋の構造100選</title>
 <link rel="stylesheet" href="css/style.css">
+<style>
+.stress-explain { background: var(--panel); border-radius: 12px; padding: 1.2rem; margin: 1rem 0; border-left: 4px solid #a29bfe; }
+.stress-explain h3 { color: #a29bfe; margin-bottom: 0.5rem; font-size: 1.05rem; }
+.stress-explain p, .stress-explain li { font-size: 0.88rem; color: #c0c0d0; line-height: 1.8; }
+.stress-explain ul { margin: 0.5rem 0 0 1.2rem; }
+.stress-explain strong { color: #ffe66d; }
+.stress-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.stress-card { background: var(--panel); border-radius: 14px; padding: 1.2rem; border: 1px solid rgba(255,255,255,0.06); cursor: pointer; transition: transform 0.25s, box-shadow 0.25s; }
+.stress-card:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(162,155,254,0.12); }
+.stress-card h4 { font-size: 1.05rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+.stress-card .icon-box { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+.stress-card p { font-size: 0.82rem; color: var(--text2); line-height: 1.6; }
+.stress-card .formula { font-family: monospace; font-size: 0.85rem; color: #4ecdc4; background: rgba(78,205,196,0.08); padding: 0.4rem 0.6rem; border-radius: 6px; margin-top: 0.5rem; display: inline-block; }
+.canvas-wrap canvas { width: 100%; border-radius: 8px; background: #0a0a1a; }
+</style>
 </head>
 <body>
 
 <a href="index.html" class="back-link">← 構造100選トップ</a>
 
-<div class="placeholder-page">
-<div class="coming-soon">🚧</div>
-<h1>このページは準備中です</h1>
-<p>この構造形式についてのインタラクティブコンテンツを開発中です。<br>今しばらくお待ちください。</p>
-<a href="index.html" class="back-link">トップに戻る</a>
+<div class="page-container">
+<h2 class="page-title"><span class="icon">🎨</span> 応力アート (STRESS ART)</h2>
+<p class="page-desc">
+構造にかかる「応力」を4つのタイプに分けて色で可視化。2級試験ではどの色（応力）がどこに出るかを問われる。
+</p>
+
+<!-- Explanation -->
+<div class="stress-explain">
+<h3>📌 応力の4種類（短大生向け解説）</h3>
+<p>
+建築物には<strong>「応力＝力の集まり」</strong>が4種類ある。それぞれが「どんな色」か覚えよう。
+</p>
+<ul>
+<li><strong>曲げ応力（σ）</strong>：はりが曲がると生じる。上側が圧縮、下側が引張。建築士試験<strong>最頻出</strong>。</li>
+<li><strong>せん断応力（τ）</strong>：はさみで切るような力。Mmaxの位置ではせん断力S=0、Smaxの位置ではM=0。</li>
+<li><strong>引張応力</strong>：ケーブル・ボルトなど「引っ張る」部材に働く。鉄骨棒鋼の接合部で重要。</li>
+<li><strong>座屈（圧縮による挫曲）</strong>：柱が細長いと「ガタン」と曲がって壊れる。長細比λ=120が目安。</li>
+</ul>
+</div>
+
+<!-- 4 Stress Cards -->
+<div class="stress-grid">
+<div class="stress-card" onclick="setMode('bending')">
+<h4><span class="icon-box" style="background:rgba(233,69,96,0.15);">🏗️</span> 1. 曲げ応力 σ</h4>
+<p>梁が曲がると生じる。上側が圧縮（赤）、下側が引張（青緑）。</p>
+<div class="formula">σ = M / Z [MPa]</div>
+</div>
+<div class="stress-card" onclick="setMode('shear')">
+<h4><span class="icon-box" style="background:rgba(78,205,196,0.15);">✂️</span> 2. せん断応力 τ</h4>
+<p>はさみで切るように働く。梁の内部で斜めに分布。</p>
+<div class="formula">τ = S·Q / (I·b) [MPa]</div>
+</div>
+<div class="stress-card" onclick="setMode('tension')">
+<h4><span class="icon-box" style="background:rgba(116,185,255,0.15);">🔗</span> 3. 引張応力</h4>
+<p>ケーブルやボルトが引っ張られる。吊り橋のケーブルが代表。</p>
+<div class="formula">σ = P / A [MPa]</div>
+</div>
+<div class="stress-card" onclick="setMode('buckling')">
+<h4><span class="icon-box" style="background:rgba(255,230,109,0.15);">📉</span> 4. 座屈（長細比）</h4>
+<p>細長い柱が「ガタン」と曲がる。長細比λが大きいほど危険。</p>
+<div class="formula">λ = Lk / i　i=√(I/A)</div>
+</div>
+</div>
+
+<!-- Interactive Canvas -->
+<div class="canvas-wrap" style="position:relative;padding:0;overflow:hidden;">
+<canvas id="stressCanvas" width="880" height="420" style="display:block;width:100%;"></canvas>
+<div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);color:#889;font-size:0.75rem;pointer-events:none;">
+上のカードをクリックで切り替え | スライダーで調整
+</div>
+</div>
+
+<!-- Controls -->
+<div class="controls">
+<div class="control"><label>荷重 P (kN)</label><input type="range" id="P" min="10" max="200" step="5" value="50"><div class="value-display" id="Pval">50 kN</div></div>
+<div class="control"><label>スパン L (m)</label><input type="range" id="L" min="2" max="10" step="0.5" value="4"><div class="value-display" id="Lval">4.0 m</div></div>
+<div class="control"><label>梁高 h (mm)</label><input type="range" id="h" min="100" max="500" step="10" value="200"><div class="value-display" id="hval">200 mm</div></div>
+<div class="control"><label>梁幅 b (mm)</label><input type="range" id="b" min="100" max="300" step="10" value="150"><div class="value-display" id="bval">150 mm</div></div>
+</div>
+
+<!-- Stress Color Map -->
+<div class="stats-grid" style="margin-top:1rem;">
+<div class="stat-card"><div class="label">曲げ応力度 σ</div><div class="value" id="sigmaVal">0</div><div class="label" style="font-size:0.6rem">MPa</div></div>
+<div class="stat-card"><div class="label">せん断応力度 τ</div><div class="value" id="tauVal">0</div><div class="label" style="font-size:0.6rem">MPa</div></div>
+<div class="stat-card"><div class="label">長細比 λ</div><div class="value" id="lambdaVal">0</div><div class="label" style="font-size:0.6rem">—</div></div>
+<div class="stat-card"><div class="label">断面二次半径 i</div><div class="value" id="iVal">0</div><div class="label" style="font-size:0.6rem">mm</div></div>
+</div>
+
+<!-- Exam tips -->
+<div class="stress-explain" style="border-left-color:#ff6b6b;">
+<h3>📝 2級試験 頻出ワンポイント</h3>
+<ul>
+<li><strong>「曲げとせん断の関係」</strong> → <strong>曲げモーメントが最大</strong>の位置ではせん断力はゼロ（S=0）。<strong>せん断力が最大</strong>の位置では曲げモーメントはゼロ（M=0）。</li>
+<li><strong>「同じ断面でも高さが違うと？」</strong> → Z=bh²/6 だから<strong>高さを2倍にすると4倍強くなる</strong>。<strong>幅を2倍にすると2倍</strong>しか強くならない。</li>
+<li><strong>「座屈とは？」</strong> → 細長い柱が<strong>圧縮で曲がって壊れる</strong>こと。鉄筋コンクリートの柱も配筋で細長くなりすぎるとダメ。</li>
+<li><strong>「角形鋼管が強い理由」</strong> → 同じ断面積でも<strong>断面二次モーメントIが大きい</strong>から。円形より直角で広がった形が曲げに強い。</li>
+</ul>
+</div>
+
 </div>
 
 <footer>
-<p>bridge-archetypes-100 | 建築士試験2級構造対応</p>
+<p>bridge-archetypes-100 | 2級建築士試験対応 | 応力の4種類を色で学ぶ</p>
 </footer>
 
+<script>
+const canvas = document.getElementById('stressCanvas');
+const ctx = canvas.getContext('2d');
+let mode = 'bending';
+let params = { P:50000, L:4000, h:200, b:150 };
+
+function setMode(m) { mode = m; draw(); }
+
+function stressColorBending(y, h, ratio) {
+  // neutral axis at center
+  const dist = Math.abs(y - h/2) / (h/2); // 0 at center, 1 at edge
+  if(mode !== 'bending') return { r:30,g:30,b:40 };
+  if(ratio * dist < 0.3) return { r:78,g:205,b:196 };
+  if(ratio * dist < 0.6) return { r:255,g:230,b:109 };
+  if(ratio * dist < 0.85) return { r:255,g:150,b:80 };
+  return { r:255,g:60,b:60 };
+}
+
+function stressColorShear(y, h, ratio) {
+  // parabolic distribution, max at center
+  const dist = 1 - Math.abs(y - h/2) / (h/2);
+  if(mode !== 'shear') return { r:30,g:30,b:40 };
+  if(ratio * dist < 0.3) return { r:78,g:205,b:196 };
+  if(ratio * dist < 0.6) return { r:255,g:230,b:109 };
+  if(ratio * dist < 0.85) return { r:255,g:150,b:80 };
+  return { r:255,g:60,b:60 };
+}
+
+function draw() {
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  const mx = 80, my = H/2;
+  const cw = W - mx*2 - 60;
+  const scale = cw / params.L;
+
+  const I = params.b * params.h**3 / 12;
+  const Z = params.b * params.h**2 / 6;
+  const M = params.P * params.L / 4;
+  const S = params.P / 2;
+  const sigma = M / Z;
+  const tauMax = 1.5 * S / (params.b * params.h);
+  const i = Math.sqrt(I / (params.b * params.h));
+  const lambda = params.L / i; // simplified
+
+  const beamH_px = Math.min(params.h * 0.8, 80);
+
+  // Draw beam with stress coloring
+  const Nx = 40, Ny = 12;
+  for(let ix=0; ix<Nx; ix++) {
+    for(let iy=0; iy<Ny; iy++) {
+      const x0 = mx + ix * cw/Nx;
+      const y0 = my - beamH_px/2 + iy * beamH_px/Ny;
+      const rectW = cw/Nx + 1;
+      const rectH = beamH_px/Ny + 1;
+
+      let col;
+      if(mode === 'bending') {
+        const dist = Math.abs(iy - Ny/2) / (Ny/2);
+        col = stressColorBending(iy, Ny, sigma/12 || 1);
+      } else if(mode === 'shear') {
+        const dist = 1 - Math.abs(iy - Ny/2) / (Ny/2);
+        col = stressColorShear(iy, Ny, tauMax/8 || 1);
+      } else if(mode === 'tension') {
+        col = { r: 116, g: 185, b: 255 };
+      } else {
+        col = lambda > 120 ? { r:255, g:60, b:60 } : lambda > 80 ? { r:255, g:150, b:80 } : { r:78, g:205, b:196 };
+      }
+      ctx.fillStyle = `rgba(${col.r},${col.g},${col.b},0.6)`;
+      ctx.fillRect(x0, y0, rectW, rectH);
+    }
+  }
+
+  // Beam outline
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+  ctx.strokeRect(mx, my-beamH_px/2, cw, beamH_px);
+
+  // Supports
+  ctx.fillStyle = '#556'; ctx.beginPath(); ctx.moveTo(mx-8, my+beamH_px/2); ctx.lineTo(mx+8, my+beamH_px/2); ctx.lineTo(mx, my+beamH_px/2+18); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(mx+cw-8, my+beamH_px/2); ctx.lineTo(mx+cw+8, my+beamH_px/2); ctx.lineTo(mx+cw, my+beamH_px/2+18); ctx.fill();
+
+  // Load
+  ctx.strokeStyle = '#e94560'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(mx+cw/2, my-beamH_px/2-50); ctx.lineTo(mx+cw/2, my-beamH_px/2-6); ctx.stroke();
+  ctx.fillStyle = '#e94560';
+  ctx.beginPath(); ctx.moveTo(mx+cw/2, my-beamH_px/2); ctx.lineTo(mx+cw/2-7, my-beamH_px/2-12); ctx.lineTo(mx+cw/2+7, my-beamH_px/2-12); ctx.fill();
+
+  // Labels
+  ctx.fillStyle = '#ffe66d'; ctx.font = 'bold 14px sans-serif';
+  if(mode === 'bending') {
+    ctx.fillText('曲げ: 上圧縮・下引張', 20, 30);
+    ctx.fillStyle = '#e94560'; ctx.fillText('圧縮', mx+10, my-beamH_px/2-10);
+    ctx.fillStyle = '#4ecdc4'; ctx.fillText('引張', mx+10, my+beamH_px/2+25);
+    ctx.fillStyle = '#a0a0c0'; ctx.fillText('中立軸', mx+cw-70, my+5);
+  } else if(mode === 'shear') {
+    ctx.fillText('せん断: 中央で最大', 20, 30);
+  } else if(mode === 'tension') {
+    ctx.fillText('引張: 等分布', 20, 30);
+  } else {
+    ctx.fillText('座屈: 長細比 λ = ' + lambda.toFixed(0), 20, 30);
+  }
+
+  // Update stats
+  document.getElementById('sigmaVal').textContent = sigma.toFixed(1);
+  document.getElementById('tauVal').textContent = tauMax.toFixed(2);
+  document.getElementById('lambdaVal').textContent = lambda.toFixed(0);
+  document.getElementById('iVal').textContent = i.toFixed(1);
+}
+
+function update() {
+  params.P = parseFloat(document.getElementById('P').value) * 1000;
+  params.L = parseFloat(document.getElementById('L').value) * 1000;
+  params.h = parseFloat(document.getElementById('h').value);
+  params.b = parseFloat(document.getElementById('b').value);
+  document.getElementById('Pval').textContent = (params.P/1000).toFixed(0) + ' kN';
+  document.getElementById('Lval').textContent = (params.L/1000).toFixed(1) + ' m';
+  document.getElementById('hval').textContent = params.h + ' mm';
+  document.getElementById('bval').textContent = params.b + ' mm';
+  draw();
+}
+['P','L','h','b'].forEach(id => document.getElementById(id).addEventListener('input', update));
+draw();
+</script>
 </body>
 </html>

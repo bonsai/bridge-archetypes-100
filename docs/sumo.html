@@ -3,23 +3,218 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>準備中 | 橋の構造100選</title>
+<title>相撲力士 Simulator - 荷重の体感 | 橋の構造100選</title>
 <link rel="stylesheet" href="css/style.css">
+<style>
+.sumo-explain { background: var(--panel); border-radius: 12px; padding: 1.2rem; margin: 1rem 0; border-left: 4px solid #ff6b6b; }
+.sumo-explain h3 { color: #ff6b6b; margin-bottom: 0.5rem; font-size: 1.05rem; }
+.sumo-explain p { font-size: 0.9rem; color: #c0c0d0; line-height: 1.8; }
+.sumo-explain strong { color: #ffe66d; }
+.balcony-scene { background: #0f1120; border-radius: 16px; padding: 2rem; text-align: center; margin: 1.5rem 0; border: 1px solid rgba(255,255,255,0.06); }
+.balcony-floor { height: 20px; background: linear-gradient(90deg, #d4a574, #b08d5f); border-radius: 4px; margin-top: 1rem; position: relative; }
+.balcony-floor.cracked { background: linear-gradient(90deg, #8b0000, #5a0000); animation: crackFlash 0.8s infinite alternate; }
+@keyframes crackFlash { from { opacity: 1; } to { opacity: 0.6; } }
+.balcony-width { font-size: 0.75rem; color: #a0a0c0; margin-top: 0.3rem; }
+.garden-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.4rem; padding: 1.5rem; min-height: 80px; align-items: flex-end; }
+.sumo-figure { font-size: 2.2rem; animation: bounce 0.5s ease-in-out infinite alternate; transform-origin: bottom center; display: inline-block; }
+@keyframes bounce { from { transform: scaleY(1) translateY(0); } to { transform: scaleY(0.85) translateY(5px); } }
+.sumo-counter { font-size: 2.5rem; font-weight: 900; color: var(--accent); text-align: center; margin: 0.5rem 0; }
+.force-bar-wrap { background: #1a1a2e; border-radius: 10px; padding: 0.8rem; margin: 1rem 0; }
+.force-bar-label { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text2); margin-bottom: 0.3rem; }
+.force-bar { height: 24px; border-radius: 12px; background: #0a0a1a; overflow: hidden; position: relative; }
+.force-bar-fill { height: 100%; border-radius: 12px; transition: width 0.4s ease, background 0.4s; }
+.force-bar-safe { background: linear-gradient(90deg, #4ecdc4, #2d8b8b); }
+.force-bar-warn { background: linear-gradient(90deg, #ffe66d, #e6a23c); }
+.force-bar-danger { background: linear-gradient(90deg, #ff6b6b, #c0392b); }
+.force-bar-broken { background: linear-gradient(90deg, #8b0000, #3d0000); }
+.add-sumo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin: 1rem 0; }
+.add-sumo-btn { padding: 0.7rem; border-radius: 10px; border: none; background: var(--panel); color: #fff; font-size: 1.3rem; cursor: pointer; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.08); }
+.add-sumo-btn:hover { background: rgba(233,69,96,0.2); border-color: var(--accent); transform: translateY(-2px); }
+.bulk-btn { grid-column: span 3; font-size: 1rem; background: rgba(78,205,196,0.1); color: #4ecdc4; }
+.reset-btn { grid-column: span 3; font-size: 0.9rem; background: rgba(255,255,255,0.05); color: var(--text2); }
+</style>
 </head>
 <body>
 
 <a href="index.html" class="back-link">← 構造100選トップ</a>
 
-<div class="placeholder-page">
-<div class="coming-soon">🚧</div>
-<h1>このページは準備中です</h1>
-<p>この構造形式についてのインタラクティブコンテンツを開発中です。<br>今しばらくお待ちください。</p>
-<a href="index.html" class="back-link">トップに戻る</a>
+<div class="page-container">
+<h2 class="page-title"><span class="icon">🥋</span> 相撲力士 Simulator</h2>
+<p class="page-desc">
+相撲力士1人 ≒ 1.5kN（150kgf）。何人居ると橋（部屋）が破断する？
+許容曲げ応力度と床梁の断面係数から即座に判定。2級試験の「荷重→安全判定」を体感。
+</p>
+
+<div class="sumo-explain">
+<h3>📌 仕組み</h3>
+<p>
+1人の力士は体重<strong>150kg</strong> ≒ 荷重 <strong>P = 1.5kN</strong>（正確には1.47kNだが試験では1.5kNで計算可）。
+梁にσ = M/Z = P・L/Z の応力がかかる。σが許容応力度fbを超えると<strong>破断</strong>。
+建築基準法での許容たわみは通常 <strong>L/250</strong> を基準とする。
+</p>
 </div>
 
-<footer>
-<p>bridge-archetypes-100 | 建築士試験2級構造対応</p>
-</footer>
+<!-- Balcony Scene -->
+<div class="balcony-scene">
+<div class="sumo-counter"><span id="sumoCount">0</span> 人</div>
+<div class="garden-grid" id="sumoGarden"></div>
+<div class="balcony-floor" id="balconyFloor"></div>
+<div class="balcony-width">6尺（1820mm）× 5尺（1515mm） 普通床 スギ2級</div>
+</div>
 
+<!-- Force Bar -->
+<div class="force-bar-wrap">
+<div class="force-bar-label"><span>応力度 σ / 許容応力度 fb</span><span id="forcePct">0%</span></div>
+<div class="force-bar">
+<div class="force-bar-fill force-bar-safe" id="forceBar" style="width:0%"></div>
+</div>
+<div class="force-bar-label" style="margin-top:0.5rem;">
+<span>σ = <span id="sigmaVal">0</span> MPa</span>
+<span>fb = <span id="fbVal">12</span> MPa</span>
+</div>
+</div>
+
+<!-- Controls -->
+<div class="add-sumo-grid">
+<button class="add-sumo-btn" onclick="addSumo(1)">＋1</button>
+<button class="add-sumo-btn" onclick="addSumo(2)">＋2</button>
+<button class="add-sumo-btn" onclick="addSumo(5)">＋5</button>
+<button class="add-sumo-btn bulk-btn" onclick="addSumo(10)">力士10人登場</button>
+<button class="add-sumo-btn reset-btn" onclick="resetSumo()">🔄 リセット</button>
+</div>
+
+<div class="controls" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); margin-top:1rem;">
+<div class="control"><label>梁スパン L (m)</label><input type="range" id="L" min="1.5" max="4" step="0.1" value="1.82"><div class="value-display" id="Lval">1.82 m</div></div>
+<div class="control"><label>梁高 h (mm)</label><input type="range" id="h" min="90" max="300" step="5" value="120"><div class="value-display" id="hval">120 mm</div></div>
+<div class="control"><label>梁幅 b (mm)</label><input type="range" id="b" min="60" max="180" step="5" value="90"><div class="value-display" id="bval">90 mm</div></div>
+<div class="control"><label>材料（許容応力度）</label>
+<select id="mat" style="padding:0.5rem;background:#0f3460;color:#fff;border:none;border-radius:6px;">
+<option value="sugi2">スギ2級 fb=12MPa</option>
+<option value="hinoki">ヒノキ fb=14MPa</option>
+<option value="steel">鋼 SM400 fb=210MPa</option>
+<option value="rc">RC fb=18MPa</option>
+</select>
+</div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+<div class="stat-card"><div class="label">総荷重</div><div class="value" id="totalLoad">0</div><div class="label" style="font-size:0.6rem">kN</div></div>
+<div class="stat-card"><div class="label">曲げ応力度 σ</div><div class="value" id="sigmaDisp">0</div><div class="label" style="font-size:0.6rem">MPa</div></div>
+<div class="stat-card"><div class="label">断面係数 Z</div><div class="value" id="ZDisp">0</div><div class="label" style="font-size:0.6rem">×10⁴ mm³</div></div>
+<div class="stat-card"><div class="label">たわみ δ</div><div class="value" id="deltaDisp">0</div><div class="label" style="font-size:0.6rem">mm</div></div>
+<div class="stat-card" id="resultCard"><div class="label">判定</div><div class="value" id="resultDisp" style="font-size:1.2rem">✅ OK</div></div>
+</div>
+
+<!-- 2級試験フレーズ -->
+<div class="sumo-explain" style="border-left-color:#ffe66d;">
+<h3>📝 2級試験で出る計算パターン</h3>
+<p style="line-height:2;">
+<strong>人荷重：</strong>集合住宅の部屋は <strong>1,800N/m²（≒180kgf/m²）</strong> で計算。<br>
+<strong>梁の計算：</strong>σ = M/Z = PL/(4Z) （単純梁中央集中荷重時）<br>
+<strong>許容：</strong>σ ≤ fb（長期） | σ ≤ 1.5fb（短期・地震時）<br>
+<strong>たわみ：</strong>δ ≤ L/250（一般）| δ ≤ L/350（階段など）
+</p>
+</div>
+
+</div>
+
+<footer><p>bridge-archetypes-100 | 2級建築士試験対応 | 荷重→破断の体感</p></footer>
+
+<script>
+const mats = {
+  sugi2:  { fb: 12,  E: 10000, name: 'スギ2級' },
+  hinoki: { fb: 14,  E: 12000, name: 'ヒノキ' },
+  steel:  { fb: 210, E: 200000, name: '鋼SM400' },
+  rc:     { fb: 18,  E: 30000, name: 'RC' }
+};
+let sumoCount = 0;
+let params = { L:1820, h:120, b:90, mat:'sugi2' };
+
+function calc() {
+  const mat = mats[params.mat];
+  const P = sumoCount * 1470; // 150kgf ≒ 1470N
+  const M = P * params.L / 4; // concentrated load on simple beam
+  const Z = params.b * params.h * params.h / 6;
+  const I = params.b * params.h * params.h * params.h / 12;
+  const sigma = M / Z;
+  const delta = P * params.L * params.L * params.L / (48 * mat.E * I);
+  const ratio = sigma / mat.fb;
+
+  document.getElementById('sumoCount').textContent = sumoCount;
+  document.getElementById('totalLoad').textContent = (P/1000).toFixed(1);
+  document.getElementById('sigmaDisp').textContent = sigma.toFixed(1);
+  document.getElementById('ZDisp').textContent = (Z/10000).toFixed(2);
+  document.getElementById('deltaDisp').textContent = delta.toFixed(2);
+  document.getElementById('sigmaVal').textContent = sigma.toFixed(1);
+  document.getElementById('fbVal').textContent = mat.fb;
+
+  // Bar
+  const pct = Math.min(ratio * 100, 100);
+  const bar = document.getElementById('forceBar');
+  const barWrap = document.querySelector('.force-bar-wrap');
+  bar.style.width = pct + '%';
+  document.getElementById('forcePct').textContent = (ratio*100).toFixed(0) + '%';
+
+  if(ratio > 1.0) { bar.className = 'force-bar-fill force-bar-broken'; }
+  else if(ratio > 0.85) { bar.className = 'force-bar-fill force-bar-danger'; }
+  else if(ratio > 0.6) { bar.className = 'force-bar-fill force-bar-warn'; }
+  else { bar.className = 'force-bar-fill force-bar-safe'; }
+
+  // Result
+  const rc = document.getElementById('resultCard');
+  const rd = document.getElementById('resultDisp');
+  const floor = document.getElementById('balconyFloor');
+  if(ratio > 1.0) {
+    rc.classList.add('fractured');
+    rd.textContent = '💥 破断！床抜け';
+    floor.classList.add('cracked');
+  } else if(ratio > 0.85) {
+    rc.classList.remove('fractured'); rd.textContent = '⚠️ ギリギリ';
+    floor.classList.remove('cracked');
+  } else {
+    rc.classList.remove('fractured'); rd.textContent = '✅ OK';
+    floor.classList.remove('cracked');
+  }
+}
+
+function renderSumo() {
+  const garden = document.getElementById('sumoGarden');
+  garden.innerHTML = '';
+  for(let i=0;i<sumoCount;i++){
+    const s = document.createElement('span');
+    s.className = 'sumo-figure';
+    s.textContent = '🥋';
+    s.style.animationDelay = (i * 0.1) + 's';
+    garden.appendChild(s);
+  }
+}
+
+function addSumo(n) {
+  sumoCount += n;
+  renderSumo();
+  calc();
+}
+function resetSumo() {
+  sumoCount = 0;
+  renderSumo();
+  calc();
+}
+
+function updateParams(){
+  params.L = parseFloat(document.getElementById('L').value)*1000;
+  params.h = parseInt(document.getElementById('h').value);
+  params.b = parseInt(document.getElementById('b').value);
+  params.mat = document.getElementById('mat').value;
+  document.getElementById('Lval').textContent = (params.L/1000).toFixed(2)+' m';
+  document.getElementById('hval').textContent = params.h+' mm';
+  document.getElementById('bval').textContent = params.b+' mm';
+  calc();
+}
+['L','h','b','mat'].forEach(id => document.getElementById(id).addEventListener('input', updateParams));
+
+updateParams();
+renderSumo();
+</script>
 </body>
 </html>

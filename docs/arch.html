@@ -3,23 +3,272 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>準備中 | 橋の構造100選</title>
+<title>アーチ橋の力学 - 圧縮力の美学 | 橋の構造100選</title>
 <link rel="stylesheet" href="css/style.css">
+<style>
+.arch-explain { background: var(--panel); border-radius: 12px; padding: 1.2rem; margin: 1rem 0; border-left: 4px solid #4ecdc4; }
+.arch-explain h3 { color: #4ecdc4; margin-bottom: 0.5rem; font-size: 1.05rem; }
+.arch-explain p, .arch-explain li { font-size: 0.88rem; color: #c0c0d0; line-height: 1.8; }
+.arch-explain ul { margin: 0.5rem 0 0 1.2rem; }
+.arch-explain strong { color: #ffe66d; }
+.comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+.compare-card { background: var(--panel); border-radius: 12px; padding: 1rem; border: 1px solid rgba(255,255,255,0.06); }
+.compare-card h4 { font-size: 1rem; margin-bottom: 0.5rem; }
+.compare-card.arch h4 { color: #4ecdc4; }
+.compare-card.beam h4 { color: #e94560; }
+.compare-card li { font-size: 0.82rem; color: var(--text2); margin: 0.3rem 0; }
+@media (max-width: 640px) { .comparison-grid { grid-template-columns: 1fr; } }
+</style>
 </head>
 <body>
 
 <a href="index.html" class="back-link">← 構造100選トップ</a>
 
-<div class="placeholder-page">
-<div class="coming-soon">🚧</div>
-<h1>このページは準備中です</h1>
-<p>この構造形式についてのインタラクティブコンテンツを開発中です。<br>今しばらくお待ちください。</p>
-<a href="index.html" class="back-link">トップに戻る</a>
+<div class="page-container">
+<h2 class="page-title"><span class="icon">🌉</span> アーチ橋の力学 (ARCH)</h2>
+<p class="page-desc">
+アーチは「推力（水平力）」で荷重を支える。梁と違って圧縮力しか出ないのが特徴。
+2級試験では「アーチ脚部の反力の向き」を問われることが多い。
+</p>
+
+<!-- Explanation -->
+<div class="arch-explain">
+<h3>📌 アーチの仕組み（短大生向け解説）</h3>
+<p>
+<strong>梁</strong>は荷重をかけると曲がる（曲げモーメント）。
+<strong>アーチ</strong>は荷重をかけると「<strong>圧縮力</strong>」で押し返す。
+だからアーチは「<strong>圧縮に強い石材・コンクリート</strong>」に向いている。
+</p>
+<ul>
+<li>アーチの内部には<strong>圧縮力しか発生しない</strong> → 石材は圧縮に強く引張に弱い → 相性がいい</li>
+<li>脚部には<strong>水平反力H</strong>が生じる → これを「推力」と呼ぶ</li>
+<li>推力を受け止める基礎（アバットメント）が頑丈でないと、アーチは後退して壊れる</li>
+</ul>
+</div>
+
+<div class="comparison-grid">
+<div class="compare-card arch">
+<h4>🌉 アーチ橋</h4>
+<ul>
+<li>主な力：圧縮力のみ</li>
+<li>反力：斜め（水平＋垂直）</li>
+<li>材料：石・コンクリート・レンガ</li>
+<li>たわみ：小さい</li>
+<li>弱点：基礎（アバットメント）が要頑丈</li>
+<li>代表例：ローマの水道橋、万松寺橋</li>
+</ul>
+</div>
+<div class="compare-card beam">
+<h4>🏗️ 桁橋（梁）</h4>
+<ul>
+<li>主な力：曲げ＋せん断</li>
+<li>反力：垂直のみ（単純梁の場合）</li>
+<li>材料：木材・鋼・RC</li>
+<li>たわみ：比較的大きい</li>
+<li>弱点：長スパンだとたわみが大きくなる</li>
+<li>代表例：木造住居の床梁</li>
+</ul>
+</div>
+</div>
+
+<!-- Formula -->
+<div class="formula-box" style="border-left-color:#4ecdc4;">
+<div class="math">H = M_beam / f （近似式）</div>
+<div class="explain">推力Hは「同じスパンの梁に生じる曲げモーメント」÷「アーチの矢高」で大体求まる。矢高が大きいほど推力は小さくなる。</div>
+</div>
+
+<div class="formula-box" style="border-left-color:#ffe66d;">
+<div class="math">アーチ脚部反力：V = P/2（垂直）　H = PL/(8f)（水平・近似）</div>
+<div class="explain">P:集中荷重 | L:スパン | f:アーチの矢高 | 水平反力Hは基礎に大きな負担となる。試験では「アーチを支える基礎が重要」と覚えよう。</div>
+</div>
+
+<!-- Canvas -->
+<div class="canvas-wrap" style="position:relative;padding:0;overflow:hidden;">
+<canvas id="archCanvas" width="880" height="420" style="display:block;width:100%;"></canvas>
+<div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);color:#889;font-size:0.75rem;pointer-events:none;">
+スライダーで荷重と矢高を変えると推力が変化
+</div>
+</div>
+
+<!-- Controls -->
+<div class="controls">
+<div class="control"><label>スパン L (m)</label><input type="range" id="L" min="10" max="60" step="5" value="30"><div class="value-display" id="Lval">30 m</div></div>
+<div class="control"><label>矢高 f (m)</label><input type="range" id="f" min="3" max="20" step="1" value="8"><div class="value-display" id="fval">8 m</div></div>
+<div class="control"><label>集中荷重 P (kN)</label><input type="range" id="P" min="50" max="500" step="10" value="200"><div class="value-display" id="Pval">200 kN</div></div>
+<div class="control"><label>材料</label>
+<select id="mat" style="padding:0.5rem;background:#0f3460;color:#fff;border:none;border-radius:6px;">
+<option value="stone">石造（圧縮強度 30MPa）</option>
+<option value="concrete">RC（圧縮強度 24MPa）</option>
+<option value="steel">鋼（圧縮強度 210MPa）</option>
+</select>
+</div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+<div class="stat-card"><div class="label">垂直反力 V</div><div class="value" id="vDisp">100</div><div class="label" style="font-size:0.6rem">kN</div></div>
+<div class="stat-card"><div class="label">水平推力 H</div><div class="value" id="hDisp">94</div><div class="label" style="font-size:0.6rem">kN</div></div>
+<div class="stat-card"><div class="label">推力比 H/V</div><div class="value" id="ratioDisp">0.94</div><div class="label" style="font-size:0.6rem">—</div></div>
+<div class="stat-card"><div class="label">アーチ軸力 N</div><div class="value" id="nDisp">137</div><div class="label" style="font-size:0.6rem">kN</div></div>
+<div class="stat-card" id="resultCard"><div class="label">判定</div><div class="value" id="resultDisp" style="font-size:1.2rem">✅ OK</div></div>
+</div>
+
+<!-- 2級試験対策フレーズ -->
+<div class="arch-explain" style="border-left-color:#ff6b6b;">
+<h3>📝 2級試験 頻出ワンポイント</h3>
+<ul>
+<li><strong>「アーチ橋の脚部反力」</strong> → 垂直だけでなく<strong>水平反力（推力）</strong>がある。</li>
+<li><strong>「アーチに適した材料」</strong> → <strong>圧縮に強い石・コンクリート</strong>。引張に弱くても大丈夫。</li>
+<li><strong>「アーチの弱点」</strong> → 基礎（アバットメント）の移動・沈下。基礎が動くとアーチは壊れる。</li>
+<li><strong>「アーチと吊り橋の違い」</strong> → アーチは<strong>圧縮</strong>、吊り橋はケーブルが<strong>引張</strong>で支える。</li>
+</ul>
+</div>
+
 </div>
 
 <footer>
-<p>bridge-archetypes-100 | 建築士試験2級構造対応</p>
+<p>bridge-archetypes-100 | 2級建築士試験対応 | アーチ橋の圧縮力学</p>
 </footer>
 
+<script>
+const canvas = document.getElementById('archCanvas');
+const ctx = canvas.getContext('2d');
+let state = { L:30000, f:8000, P:200000, mat:'stone' };
+
+const mats = {
+  stone:    { fcomp: 30,  color: '#b0a090', name: '石造' },
+  concrete: { fcomp: 24,  color: '#999',    name: 'RC' },
+  steel:    { fcomp: 210, color: '#789',    name: '鋼' }
+};
+
+function getPos(t, L, f) {
+  const x = (t - 0.5) * L;
+  const y = -4 * f * (t - 0.5) * (t - 0.5) + f;
+  return { x, y };
+}
+
+function draw() {
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  const mx = 60, my = H - 60;
+  const cw = W - mx*2 - 40;
+  const scale = cw / state.L;
+
+  // Ground
+  ctx.strokeStyle = 'rgba(100,100,120,0.3)';
+  ctx.beginPath(); ctx.moveTo(0, my); ctx.lineTo(W, my); ctx.stroke();
+
+  // Arch shape (parabola)
+  const N = 40;
+  ctx.beginPath();
+  for(let i=0; i<=N; i++) {
+    const t = i/N;
+    const p = getPos(t, state.L, state.f);
+    const px = mx + (p.x + state.L/2) * scale;
+    const py = my - p.y * scale;
+    if(i===0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.lineWidth = 10;
+  ctx.strokeStyle = mats[state.mat].color;
+  ctx.stroke();
+
+  // Fill faint
+  ctx.lineTo(mx + state.L*scale, my); ctx.lineTo(mx, my); ctx.closePath();
+  ctx.fillStyle = mats[state.mat].color + '22';
+  ctx.fill();
+
+  // Compression force arrows (along arch)
+  const arrowCount = 6;
+  for(let i=1; i<arrowCount; i++) {
+    const t1 = i/arrowCount;
+    const t2 = t1 + 0.04;
+    const p1 = getPos(t1, state.L, state.f);
+    const p2 = getPos(t2, state.L, state.f);
+    const ax = mx + (p1.x + state.L/2) * scale;
+    const ay = my - p1.y * scale;
+    const ang = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+    ctx.strokeStyle = '#4ecdc4'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(ax - 18*Math.cos(ang), ay - 18*Math.sin(ang)); ctx.stroke();
+    ctx.fillStyle = '#4ecdc4';
+    ctx.beginPath();
+    ctx.moveTo(ax - 18*Math.cos(ang), ay - 18*Math.sin(ang));
+    ctx.lineTo(ax - 10*Math.cos(ang-0.4), ay - 10*Math.sin(ang-0.4));
+    ctx.lineTo(ax - 10*Math.cos(ang+0.4), ay - 10*Math.sin(ang+0.4));
+    ctx.fill();
+  }
+
+  // Load P arrow at center top
+  const cp = getPos(0.5, state.L, state.f);
+  const cx = mx + state.L/2 * scale + mx; // wait, p.x at t=0.5 is 0
+  // correct center x:
+  const centerX = mx + state.L/2 * scale;
+  const centerY = my - state.f * scale;
+  ctx.strokeStyle = '#e94560'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(centerX, centerY - 60); ctx.lineTo(centerX, centerY - 6); ctx.stroke();
+  ctx.fillStyle = '#e94560';
+  ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(centerX-7, centerY-12); ctx.lineTo(centerX+7, centerY-12); ctx.fill();
+  ctx.font = 'bold 13px sans-serif'; ctx.fillText(`P=${(state.P/1000).toFixed(0)}kN`, centerX+12, centerY-30);
+
+  // Reaction arrows at feet
+  const V = state.P/2;
+  const H_approx = state.P * state.L / (8 * state.f);
+  const N = Math.sqrt(V*V + H_approx*H_approx);
+
+  // Left foot
+  const lf = getPos(0, state.L, state.f);
+  const lx = mx, ly = my - lf.y * scale;
+  // Vertical up
+  drawArrow(lx, ly+40, lx, ly+6, '#ffe66d', `${(V/1000).toFixed(1)}kN`);
+  // Horizontal right (thrust)
+  drawArrow(lx-40, ly, lx-6, ly, '#4ecdc4', `${(H_approx/1000).toFixed(1)}kN`);
+
+  // Right foot
+  const rf = getPos(1, state.L, state.f);
+  const rx = mx + state.L*scale, ry = my - rf.y*scale;
+  drawArrow(rx, ry+40, rx, ry+6, '#ffe66d', '');
+  drawArrow(rx+40, ry, rx+6, ry, '#4ecdc4', '');
+
+  // Update DOM
+  document.getElementById('vDisp').textContent = (V/1000).toFixed(1);
+  document.getElementById('hDisp').textContent = (H_approx/1000).toFixed(1);
+  document.getElementById('ratioDisp').textContent = (H_approx/V).toFixed(2);
+  document.getElementById('nDisp').textContent = (N/1000).toFixed(1);
+
+  // Result: check if thrust exceeds capacity (simplified)
+  const compStress = N / (0.3 * 0.5 * 1e6); // rough section 0.3m x 0.5m
+  const rc = document.getElementById('resultCard');
+  const rd = document.getElementById('resultDisp');
+  if(compStress > mats[state.mat].fcomp) {
+    rc.classList.add('fractured'); rd.textContent = '💥 圧壊';
+  } else if(compStress > mats[state.mat].fcomp * 0.8) {
+    rc.classList.remove('fractured'); rd.textContent = '⚠️ 危険';
+  } else {
+    rc.classList.remove('fractured'); rd.textContent = '✅ OK';
+  }
+}
+
+function drawArrow(x1,y1,x2,y2,color,label){
+  ctx.strokeStyle=color; ctx.fillStyle=color; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  const ang=Math.atan2(y2-y1,x2-x1);
+  ctx.beginPath(); ctx.moveTo(x2,y2); ctx.lineTo(x2-8*Math.cos(ang-0.4),y2-8*Math.sin(ang-0.4));
+  ctx.lineTo(x2-8*Math.cos(ang+0.4),y2-8*Math.sin(ang+0.4)); ctx.closePath(); ctx.fill();
+  if(label){ ctx.font='bold 11px sans-serif'; ctx.fillText(label,x2+8,y2+4); }
+}
+
+function update(){
+  state.L = parseFloat(document.getElementById('L').value)*1000;
+  state.f = parseFloat(document.getElementById('f').value)*1000;
+  state.P = parseFloat(document.getElementById('P').value)*1000;
+  state.mat = document.getElementById('mat').value;
+  document.getElementById('Lval').textContent = (state.L/1000).toFixed(0)+' m';
+  document.getElementById('fval').textContent = (state.f/1000).toFixed(0)+' m';
+  document.getElementById('Pval').textContent = (state.P/1000).toFixed(0)+' kN';
+  draw();
+}
+['L','f','P'].forEach(id=>document.getElementById(id).addEventListener('input',update));
+document.getElementById('mat').addEventListener('change',update);
+update();
+</script>
 </body>
 </html>

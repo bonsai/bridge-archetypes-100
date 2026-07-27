@@ -3,23 +3,242 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>準備中 | 橋の構造100選</title>
+<title>吊り橋の力学 - ケーブルの引張 | 橋の構造100選</title>
 <link rel="stylesheet" href="css/style.css">
+<style>
+.sus-explain { background: var(--panel); border-radius: 12px; padding: 1.2rem; margin: 1rem 0; border-left: 4px solid #74b9ff; }
+.sus-explain h3 { color: #74b9ff; margin-bottom: 0.5rem; font-size: 1.05rem; }
+.sus-explain p, .sus-explain li { font-size: 0.88rem; color: #c0c0d0; line-height: 1.8; }
+.sus-explain ul { margin: 0.5rem 0 0 1.2rem; }
+.sus-explain strong { color: #ffe66d; }
+.comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+.compare-card { background: var(--panel); border-radius: 12px; padding: 1rem; border: 1px solid rgba(255,255,255,0.06); }
+.compare-card h4 { font-size: 1rem; margin-bottom: 0.5rem; }
+.compare-arch h4 { color: #4ecdc4; }
+.compare-sus h4 { color: #74b9ff; }
+.compare-card li { font-size: 0.82rem; color: var(--text2); margin: 0.3rem 0; }
+@media (max-width: 640px) { .comparison-grid { grid-template-columns: 1fr; } }
+</style>
 </head>
 <body>
 
 <a href="index.html" class="back-link">← 構造100選トップ</a>
 
-<div class="placeholder-page">
-<div class="coming-soon">🚧</div>
-<h1>このページは準備中です</h1>
-<p>この構造形式についてのインタラクティブコンテンツを開発中です。<br>今しばらくお待ちください。</p>
-<a href="index.html" class="back-link">トップに戻る</a>
+<div class="page-container">
+<h2 class="page-title"><span class="icon">🌉</span> 吊り橋の力学 (SUSPENSION)</h2>
+<p class="page-desc">
+吊り橋世界最長＝明石海峡大橋（3911m）。ケーブル（鋼ロープ）が引張力で全荷重を支える。
+2級試験では「ケーブルの張力」と「主塔の圧縮」を問われる。
+</p>
+
+<!-- Explanation -->
+<div class="sus-explain">
+<h3>📌 吊り橋の仕組み（短大生向け解説）</h3>
+<p>
+吊り橋は<strong>「ケーブル（鋼ワイヤー）の引張力」</strong>だけで支える橋。
+ケーブルは滑車のような形（パラボラ）に垂れる。そのカーブが<strong>「フェニー・カーブ」</strong>と呼ばれる。
+</p>
+<ul>
+<li>ケーブル張力 T = <strong>√(H² + V²)</strong> ：水平分力H＋垂直分力Vの合成</li>
+<li>主塔（CとD）はケーブルからの力を受けて<strong>圧縮</strong> → 建物の柱と同じ</li>
+<li>ケーブルが風で揺れる → タコマナローズ橋（1940年）の風による倒壊が教訓</li>
+<li>ロープウェイ・スキー場のリフトも同じ原理。身近な「吊り橋」。</li>
+</ul>
+</div>
+
+<div class="comparison-grid">
+<div class="compare-card compare-arch">
+<h4>🌉 アーチ橋</h4>
+<ul>
+<li>力：圧縮のみ</li>
+<li>材料：石・コンクリート</li>
+<li>推力：基礎が必要</li>
+<li>スパン：〜500m程度</li>
+<li>たわみ：小さい</li>
+</ul>
+</div>
+<div class="compare-card compare-sus">
+<h4>🌉 吊り橋</h4>
+<ul>
+<li>力：引張（ケーブル）＋圧縮（主塔）</li>
+<li>材料：鋼（高張力鋼）</li>
+<li>アンカー：岩盤に固定</li>
+<li>スパン：〜4000m可能</li>
+<li>たわみ：風に揺れやすい</li>
+</ul>
+</div>
+</div>
+
+<!-- Formula -->
+<div class="formula-box" style="border-left-color:#74b9ff;">
+<div class="math">T ≈ H·√(1 + (8f/L)²)　（パラボラ近似）</div>
+<div class="explain">T:ケーブル張力 | H:水平張力（一定） | f:垂下量（ケーブルのたわみ）| L:スパン | fが大きい（ゆるい）ほどTは小さくなる。</div>
+</div>
+
+<div class="formula-box" style="border-left-color:#ffe66d;">
+<div class="math">主塔反力 = 2T·sinθ （左右のケーブルからの圧縮）</div>
+<div class="explain">吊り橋の主塔は「圧縮のみ」の柱。両側から引っ張られるので、矢印を図に描くと主塔は必ず圧縮。これを覚えれば試験で役立つ。</div>
+</div>
+
+<!-- Canvas -->
+<div class="canvas-wrap" style="position:relative;padding:0;overflow:hidden;">
+<canvas id="susCanvas" width="880" height="440" style="display:block;width:100%;"></canvas>
+<div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);color:#889;font-size:0.75rem;pointer-events:none;">
+スライダーで垂下量と荷重を変化
+</div>
+</div>
+
+<!-- Controls -->
+<div class="controls">
+<div class="control"><label>スパン L (m)</label><input type="range" id="L" min="200" max="2000" step="50" value="600"><div class="value-display" id="Lval">600 m</div></div>
+<div class="control"><label>垂下量 f (m)</label><input type="range" id="f" min="20" max="150" step="5" value="60"><div class="value-display" id="fval">60 m</div></div>
+<div class="control"><label>均布荷重 w (kN/m)</label><input type="range" id="w" min="5" max="100" step="5" value="30"><div class="value-display" id="wval">30 kN/m</div></div>
+<div class="control"><label>ケーブル強度</label>
+<select id="cable" style="padding:0.5rem;background:#0f3460;color:#fff;border:none;border-radius:6px;">
+<option value="standard">標準鋼ケーブル（破断強度 1.2GPa）</option>
+<option value="high">高張力鋼（破断強度 1.8GPa）</option>
+</select>
+</div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+<div class="stat-card"><div class="label">水平張力 H</div><div class="value" id="hDisp">563</div><div class="label" style="font-size:0.6rem">kN</div></div>
+<div class="stat-card"><div class="label">ケーブル張力 T</div><div class="value" id="tDisp">641</div><div class="label" style="font-size:0.6rem">kN</div></div>
+<div class="stat-card"><div class="label">主塔圧縮力</div><div class="value" id="towerDisp">750</div><div class="label" style="font-size:0.6rem">kN</div></div>
+<div class="stat-card"><div class="label">垂下比 f/L</div><div class="value" id="ratioDisp">0.10</div><div class="label" style="font-size:0.6rem">—</div></div>
+<div class="stat-card" id="resultCard"><div class="label">判定</div><div class="value" id="resultDisp" style="font-size:1.2rem">✅ OK</div></div>
+</div>
+
+<!-- Exam tips -->
+<div class="sus-explain" style="border-left-color:#ff6b6b;">
+<h3>📝 2級試験 頻出ワンポイント</h3>
+<ul>
+<li><strong>「吊り橋に働く力」</strong> → ケーブルは<strong>引張</strong>、主塔は<strong>圧縮</strong>。</li>
+<li><strong>「アーチ vs 吊り橋」</strong> → アーチは<strong>圧縮</strong>、吊り橋ケーブルは<strong>引張</strong>。両者は対をなす構造と言える。</li>
+<li><strong>「なぜ長大橋に向く？」</strong> → 一つのケーブルが連続的に引張を分担するため、桁橋よりも自重が軽い。</li>
+<li><strong>「タコマナローズ橋の教訓」</strong> → 風による<strong>振動（うなり）</strong>を考慮しない設計は危険。</li>
+</ul>
+</div>
+
 </div>
 
 <footer>
-<p>bridge-archetypes-100 | 建築士試験2級構造対応</p>
+<p>bridge-archetypes-100 | 2級建築士試験対応 | 吊り橋のケーブル力学</p>
 </footer>
 
+<script>
+const canvas = document.getElementById('susCanvas');
+const ctx = canvas.getContext('2d');
+let state = { L:600000, f:60000, w:30000, cable:'standard' };
+
+const cables = {
+  standard: { strength: 1200, color: '#b0b8c8' },
+  high:     { strength: 1800, color: '#d0d8e8' }
+};
+
+function getCableY(x, L, f) {
+  const t = x / L;
+  return 4 * f * t * (1 - t);
+}
+
+function draw() {
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  const mx = 60, my = H - 80;
+  const cw = W - mx*2 - 40;
+  const scale = cw / state.L;
+  const h = state.f * 4; // tower height approx
+
+  // Towers
+  ctx.fillStyle = '#556';
+  const tx1 = mx, tx2 = mx + state.L*scale;
+  ctx.fillRect(tx1-10, my-h*scale, 20, h*scale);
+  ctx.fillRect(tx2-10, my-h*scale, 20, h*scale);
+  ctx.fillStyle = '#778'; ctx.font = '11px sans-serif';
+  ctx.fillText('主塔', tx1-10, my-h*scale-6);
+  ctx.fillText('主塔', tx2-10, my-h*scale-6);
+
+  // Cable (parabola)
+  ctx.beginPath();
+  for(let i=0; i<=100; i++) {
+    const x = i/100 * state.L;
+    const y = getCableY(x, state.L, state.f);
+    const px = mx + x*scale;
+    const py = my - (h*scale - (h*scale - state.f*scale*0) + y*scale); // correct
+    // tower top y:
+    const towerTop = h * scale;
+    const pyCorrect = my - (towerTop - (h - state.f*4)*scale + y*scale); // simplified
+    // Actually just draw from tower top with sag
+    const sagY = 4 * state.f * (x/state.L) * (1 - x/state.L);
+    const py2 = my - h*scale + sagY*scale;
+    if(i===0) ctx.moveTo(px, py2); else ctx.lineTo(px, py2);
+  }
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = cables[state.cable].color;
+  ctx.stroke();
+
+  // Back stay cables
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(tx1, my-h*scale); ctx.lineTo(tx1-50, my-h*scale+80); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(tx2, my-h*scale); ctx.lineTo(tx2+50, my-h*scale+80); ctx.stroke();
+
+  // Deck as horizontal line with hanging ropes
+  const deckY = my - state.f*scale*2; // mid of sag
+  ctx.strokeStyle = '#889'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(tx1, deckY); ctx.lineTo(tx2, deckY); ctx.stroke();
+
+  // Hangers
+  for(let i=1; i<10; i++) {
+    const x = i/10 * state.L;
+    const sag = getCableY(x, state.L, state.f);
+    const cy = my - h*scale + sag*scale;
+    ctx.strokeStyle = '#667'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(mx+x*scale, cy); ctx.lineTo(mx+x*scale, deckY); ctx.stroke();
+  }
+
+  // Load arrows (distributed)
+  for(let i=1; i<10; i++) {
+    const x = i/10 * state.L;
+    ctx.strokeStyle = 'rgba(233,69,96,0.3)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(mx+x*scale, deckY); ctx.lineTo(mx+x*scale, deckY+15); ctx.stroke();
+  }
+
+  // Calculations
+  const w = state.w; // N/m actually kN/m -> multiply by 1000 for display?
+  const H_approx = w * state.L * state.L / (8 * state.f); // simplified
+  const T_approx = H_approx * Math.sqrt(1 + (4*state.f/state.L)**2);
+  const towerLoad = 2 * T_approx * (4*state.f/state.L);
+
+  document.getElementById('hDisp').textContent = (H_approx/1000).toFixed(0);
+  document.getElementById('tDisp').textContent = (T_approx/1000).toFixed(0);
+  document.getElementById('towerDisp').textContent = (towerLoad/1000).toFixed(0);
+  document.getElementById('ratioDisp').textContent = (state.f/state.L).toFixed(3);
+
+  const rc = document.getElementById('resultCard');
+  const rd = document.getElementById('resultDisp');
+  if(T_approx/1000 > cables[state.cable].strength) {
+    rc.classList.add('fractured'); rd.textContent = '💥 ケーブル破断';
+  } else if(T_approx/1000 > cables[state.cable].strength * 0.8) {
+    rc.classList.remove('fractured'); rd.textContent = '⚠️ 危険';
+  } else {
+    rc.classList.remove('fractured'); rd.textContent = '✅ OK';
+  }
+}
+
+function update(){
+  state.L = parseFloat(document.getElementById('L').value)*1000;
+  state.f = parseFloat(document.getElementById('f').value)*1000;
+  state.w = parseFloat(document.getElementById('w').value)*1000;
+  state.cable = document.getElementById('cable').value;
+  document.getElementById('Lval').textContent = (state.L/1000).toFixed(0)+' m';
+  document.getElementById('fval').textContent = (state.f/1000).toFixed(0)+' m';
+  document.getElementById('wval').textContent = (state.w/1000).toFixed(0)+' kN/m';
+  draw();
+}
+['L','f','w'].forEach(id => document.getElementById(id).addEventListener('input', update));
+document.getElementById('cable').addEventListener('change', update);
+update();
+</script>
 </body>
 </html>
